@@ -1,2 +1,8 @@
 # TimeDepthModels
-geological and seismic modelling
+Geological and seismic modelling
+
+## Installation
+
+```Wolfram
+PacletInstall["WLGPNTeam/TimeDepthModels"]
+```
