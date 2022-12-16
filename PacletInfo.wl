@@ -3,7 +3,7 @@
 PacletObject[
   <|
     "Name" -> "WLGPNTeam/TimeDepthModels",
-    "Description" -> "geological modeling",
+    "Description" -> "Geological and seismic modeling",
     "Creator" -> "Elizaveta Kuznetsova",
     "URL" -> "https://resources.wolframcloud.com/PacletRepository/resources/WLGPNTeam/TimeDepthModels",
     "SourceControlURL" -> "https://github.com/WLGPNTeam/TimeDepthModels",
