@@ -8,3 +8,8 @@
                	PlotLabel -> "Depth Model", 
                 LabelStyle -> Directive[18, Bold, Gray]]
   ]
+
+PlotVelocity[modelForPlot_] := Module[
+  {},
+  ListContourPlot[Flatten[modelForPlot, 2], PlotTheme -> "Detailed"]
+  ]
