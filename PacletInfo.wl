@@ -3,7 +3,7 @@
 PacletObject[
   <|
     "Name" -> "WLGPNTeam/TimeDepthModels",
-    "Description" -> "Geological and seismic modeling",
+    "Description" -> "Geological modeling",
     "Creator" -> "Elizaveta Kuznetsova",
     "URL" -> "https://resources.wolframcloud.com/PacletRepository/resources/WLGPNTeam/TimeDepthModels",
     "SourceControlURL" -> "https://github.com/WLGPNTeam/TimeDepthModels",
@@ -15,13 +15,18 @@ PacletObject[
       {
         "Kernel",
         "Root" -> "Kernel",
-        "Context" -> {{"WLGPNTeam`TimeDepthModels`", "TimeDepthModels.wl"}}
+        "Context" -> {
+          {
+            "WLGPNTeam`TimeDepthModels`",
+            "Init.wl"
+          }
+        }
       },
       {
         "Documentation",
         "Root" -> "Documentation",
         "Language" -> "English"
       }
-     }
-   |>
+    }
+  |>
 ]
