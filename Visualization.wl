@@ -1,5 +1,11 @@
   PlotSection[horNHsorted_] := Module[
+<<<<<<< f8072b740f5b74be51de6c321943471169735a53
   {},
+=======
+  {
+      
+    },
+>>>>>>> update
   ListLinePlot[horNHsorted,
                 GridLinesStyle -> Directive[Thick, Blue],
    	            FrameStyle -> Directive[Black, 18],
@@ -9,7 +15,9 @@
                 LabelStyle -> Directive[18, Bold, Gray]]
   ]
 
-PlotVelocity[modelForPlot_] := Module[
-  {},
-  ListContourPlot[Flatten[modelForPlot, 2], PlotTheme -> "Detailed"]
+PlotVelocity[velModel_] := Module[
+  {
+
+     },
+  ListContourPlot[Flatten[velModel, 2], PlotTheme -> "Detailed"]
   ]
