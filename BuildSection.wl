@@ -29,7 +29,7 @@ BuildDepthSection[listH_, alpha_, len_, dx_, anoMaxDisp_, hTapering_] := Module[
     
     While[i < Length[horNH] + 1, 
         horNH[[-i]] += localAnomaly;
-        localAnomalyFiltered = anoMaxDisp*GaussianFilter[rfAno["SliceData", Range[1, len, dx]], (anoStartFiltRad + hTapering TotalH/listSumH[[-i]])][[1]];
+        localAnomalyFiltered = anoMaxDisp*GaussianFilter[rfAno["SliceData", Range[1, len, dx]], (anoStartFiltRad + hTapering*Total[listH]/listSumH[[-i]])][[1]];
         max = Max[Table[localAnomaly[[j]] - localAnomalyFiltered[[j]], {j, 1, Length[localAnomaly]}]];
         localAnomaly = Table[localAnomalyFiltered[[j]] + max, {j, 1, Length[localAnomalyFiltered]}];
         i++;
