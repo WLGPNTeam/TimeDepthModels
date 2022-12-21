@@ -63,10 +63,13 @@ Module[{
                 localAnomaly = anoMaxDisp*GaussianFilter[rfAno["SliceData", Range[1, len, dx]], anoStartFiltRad][[1]];
                 listSumH = Join[{1}, Table[Sum[listH[[i]], {i, 1, i}], {i, 1, Length[listH]}]];
     
-                ];
-                            i++;
-    While[i < Length[horNH] + 1, 
+                While[i < Length[horNH] + 1, 
+                            horNH[[-i]] += localAnomaly;
                             max = Max[Table[localAnomaly[[j]] - localAnomalyFiltered[[j]], {j, 1, Length[localAnomaly]}]];
+                            localAnomalyFiltered = anoMaxDisp*GaussianFilter[rfAno["SliceData", Range[1, len, dx]], (anoStartFiltRad + hTapering*Total[listH]/listSumH[[-i]])][[1]];
+                            localAnomaly = Table[localAnomalyFiltered[[j]] + max, {j, 1, Length[localAnomalyFiltered]}];
+                            i++;
+                ];
     
                 horNHsorted = Table[{dx*j, horNH[[i]][[j]]}, {i, Length[listH] + 1}, {j, len/dx}];
     
