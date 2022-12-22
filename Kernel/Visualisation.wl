@@ -1,7 +1,7 @@
 (* ::Package:: *)
 
 (* ::Chapter:: *)
-(*BuildSection*)
+(*Visualisation*)
 
 
 (* ::Section:: *)
@@ -15,11 +15,15 @@ BeginPackage["WLGPNTeam`TimeDepthModels`"]
 (*Names*)
 
 
-ClearAll[PlotSection]
+ClearAll[PlotSection, PlotVelocity]
 
 
 PlotSection::usage = 
 "PlotSection[horNHsorted]"
+
+
+PlotVelocity::usage = 
+"PlotVelocity[velModel]"
 
 
 (* ::Section:: *)
@@ -33,14 +37,20 @@ Begin["`Private`"]
 (*Implementation*)
 
 
-PlotSection[horNHsorted_, numOfLayers_Integer] := 
-ListLinePlot[horNHsorted, 
-	GridLinesStyle -> Directive[Thick, Blue], 
+PlotSection[horNHsorted_] := 
+ListLinePlot[horNHsorted,
+	GridLinesStyle -> Directive[Thick, Blue],
 	FrameStyle -> Directive[Black, 18], 
-	Filling -> Bottom, Frame -> True, ImageSize -> 800, 
-	PlotLabels -> Map["Hor " <> ToString[#] &, (Range[numOfLayers + 1] - 1)], 
+	Filling -> Bottom, Frame -> True, ImageSize -> 800,
+	PlotLabels -> Map["Hor " <> ToString[#] &, (Range[Length[horNHsorted]] - 1)],
 	PlotLabel -> "Depth Model", 
 	LabelStyle -> Directive[18, Bold, Gray]
+]
+
+
+PlotVelocity[velModel_] :=
+ListContourPlot[Flatten[velModel, 2], 
+	PlotTheme -> "Detailed"
 ]
 
 
