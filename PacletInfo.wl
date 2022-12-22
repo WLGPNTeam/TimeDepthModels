@@ -19,6 +19,14 @@ PacletObject[
           {
             "WLGPNTeam`TimeDepthModels`",
             "Init.wl"
+          }, 
+          {
+            "WLGPNTeam`TimeDepthModels`BuildSection`",
+            "BuildSection.wl"
+          }, 
+          {
+            "WLGPNTeam`TimeDepthModels`Visualisation`",
+            "Visualisation.wl"
           }
         }
       },
@@ -26,7 +34,15 @@ PacletObject[
         "Documentation",
         "Root" -> "Documentation",
         "Language" -> "English"
-      }
+      }, 
+      {
+            "Asset",
+            "Assets" -> {
+                { "License"  , "./LICENSE"   },
+                { "ReadMe"   , "./README.md" },
+                { "Examples" , "./Examples"  }
+            }
+        }
     }
   |>
 ]
