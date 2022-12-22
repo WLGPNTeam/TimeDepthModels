@@ -68,7 +68,7 @@ Begin["`Private`"]
 
 PlotVelocity[velModel_] :=
 ListContourPlot[Flatten[velModel, 2], 
-						PlotTheme -> "Detailed"]
+						PlotTheme -> "Detailed"
 ]
 
 
