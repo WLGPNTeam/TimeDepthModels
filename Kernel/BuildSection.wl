@@ -15,7 +15,7 @@ BeginPackage["WLGPNTeam`TimeDepthModels`"]
 (*Names*)
 
 
-ClearAll[BuildDepthSection, BuildVelocitySection]
+ClearAll[BuildDepthSection, BuildVelocitySection, BuildTimeSection]
 
 
 BuildDepthSection::usage = 
@@ -24,6 +24,10 @@ BuildDepthSection::usage =
 
 BuildVelocitySection::usage =
 "BuildVelocitySection[horNHsorted, listV]"
+
+
+BuildTimeSection::usage = 
+"BuildTimeSection[horNHsorted, velModel]"
 
 
 (* ::Section:: *)
@@ -74,13 +78,13 @@ Module[{
                             i++;
                 ];
     
-                horNHsorted = Table[{j dx, horNH[[i]][[j]]}, {i, Length[listH] + 1}, {j, len/dx}];
+                horNHsorted = Table[{j dx, Round[horNH[[i]][[j]]]}, {i, Length[listH] + 1}, {j, len/dx}];
     
                 Return[<|"horNH" -> horNH, "horNHsorted" -> horNHsorted|>]
 ]
 
 
-(* ::Section:: *)
+(* ::Section::Closed:: *)
 (*End private*)
 
 
@@ -94,7 +98,7 @@ End[]
 Begin["`Private`"]
 
 
-(* ::Section:: *)
+(* ::Section::Closed:: *)
 (*Implementation*)
 
 
@@ -131,6 +135,46 @@ Module[{
                 velModel = Table[DeleteCases[velModel[[i, j]], {0, 0, 0}], {i, 1, Length[horNH]}, {j, 1, Length[horNH[[1]]]}];
                 
                 <|"velModel" -> velModel|>
+]
+
+
+(* ::Section::Closed:: *)
+(*End private*)
+
+
+End[]
+
+
+(* ::Section:: *)
+(*Private context*)
+
+
+Begin["`Private`"]
+
+
+(* ::Section:: *)
+(*Implementation*)
+
+
+BuildTimeSection[horNHsorted_, velModel_] := 
+Module[{
+		timeNH,
+		dx,
+		i,
+		j,
+		v,
+		h
+	},
+        dx = horNHsorted[[1, 2, 1]] - horNHsorted[[1, 1, 1]];
+        timeNH=Table[{0, 0}, {i, 1, Length[horNHsorted]}, {j, 1, Length[horNHsorted[[1]]]}];
+        For[i = 1, i <= Length[horNHsorted], i++,
+           For[j = 1, j <= Length[horNHsorted[[i]]], j++,
+              v = Mean[Flatten[Part[velModel[[All]][[All, j]]][[All]][[1 ;; i, All, 3]]]];
+	          h = Sum[horNHsorted[[k, j, 2]],{k, i}];
+		      timeNH[[i]][[j]] = {j dx, N[2 h/v]}
+             ]
+        ]; 
+        Return[<|"timeNH" -> timeNH|>]
 ]
 
 

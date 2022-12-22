@@ -15,15 +15,19 @@ BeginPackage["WLGPNTeam`TimeDepthModels`"]
 (*Names*)
 
 
-ClearAll[PlotSection, PlotVelocity]
+ClearAll[PlotDepthSection, PlotVelocity,PlotTimeSection]
 
 
-PlotSection::usage = 
-"PlotSection[horNHsorted]"
+PlotDepthSection::usage = 
+"PlotDepthSection[horNHsorted]"
 
 
 PlotVelocity::usage = 
 "PlotVelocity[velModel]"
+
+
+PlotTimeSection::usage = 
+"PlotTimeSection[timeNH]"
 
 
 (* ::Section:: *)
@@ -37,13 +41,13 @@ Begin["`Private`"]
 (*Implementation*)
 
 
-PlotSection[horNHsorted_] := 
+PlotDepthSection[horNHsorted_] := 
 ListLinePlot[horNHsorted,
 	GridLinesStyle -> Directive[Thick, Blue],
 	FrameStyle -> Directive[Black, 18], 
 	Filling -> Bottom, Frame -> True, ImageSize -> 800,
 	PlotLabels -> Map["Hor " <> ToString[#] &, (Range[Length[horNHsorted]] - 1)],
-	PlotLabel -> "Depth Model", 
+	PlotLabel -> "Depth Section", 
 	LabelStyle -> Directive[18, Bold, Gray]
 ]
 
@@ -51,6 +55,17 @@ ListLinePlot[horNHsorted,
 PlotVelocity[velModel_] :=
 ListContourPlot[Flatten[velModel, 2], 
 	PlotTheme -> "Detailed"
+]
+
+
+PlotTimeSection[timeNH_] := 
+ListLinePlot[timeNH,
+	GridLinesStyle -> Directive[Thick, Blue],
+	FrameStyle -> Directive[Black, 18], 
+	Filling -> Bottom, Frame -> True, ImageSize -> 800,
+	PlotLabels -> Map["Hor " <> ToString[#] &, (Range[Length[timeNH]] - 1)],
+	PlotLabel -> "Time Section", 
+	LabelStyle -> Directive[18, Bold, Gray]
 ]
 
 
