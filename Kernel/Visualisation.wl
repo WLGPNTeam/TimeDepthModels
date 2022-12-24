@@ -23,7 +23,7 @@ PlotDepthSection::usage =
 
 
 PlotVelocity::usage = 
-"PlotVelocity[velModel]"
+"PlotVelocity[velModel, horNHsorted]"
 
 
 PlotTimeSection::usage = 
@@ -47,7 +47,6 @@ Begin["`Private`"]
 
 PlotDepthSection[horNHsorted_] := 
 ListLinePlot[horNHsorted,
-					GridLinesStyle -> Directive[Thick, Blue],
 					FrameStyle -> Directive[Black, 18], 
 					Filling -> Bottom, Frame -> True, ImageSize -> 800,
 					PlotLabels -> Map["Hor " <> ToString[#] &, (Range[Length[horNHsorted]] - 1)],
@@ -56,18 +55,30 @@ ListLinePlot[horNHsorted,
 ]
 
 
-PlotVelocity[velModel_] :=
-ListContourPlot[Flatten[velModel, 2], 
-							PlotTheme -> "Detailed"
-]
+PlotVelocity[velModel_, horNHsorted_] :=
+Show[ListContourPlot[Flatten[velModel, 2], 
+										ColorFunction -> ColorData[{"RedBlueTones", "Reverse"}],
+										PlotLegends -> BarLegend[Automatic, LegendLabel -> "Vel, m/s"],
+										PlotLabel -> "Velocity Distribution"
+										],
+			ListLinePlot[horNHsorted, 
+									PlotStyle -> {Directive[Thickness[0.005], Black]},
+									PlotLabel->"Velocity Distribution",
+									PlotLabels -> Map["Hor " <> ToString[#] &, (Range[Length[horNHsorted]] - 1)],
+									LabelStyle -> Directive[14, Bold, Gray],  
+									ImageSize -> 800
+									], 
+			Frame -> True,
+			FrameStyle -> Directive[Black, 12],
+			PlotRangePadding -> {{Scaled[0.05], Scaled[0.2]}, {Scaled[0.05], Scaled[0.05]}}
+] 
 
 
 PlotTimeSection[timeNH_] := 
 ListLinePlot[timeNH,
-					GridLinesStyle -> Directive[Thick, Blue],
 					FrameStyle -> Directive[Black, 18], 
 					Filling -> Bottom, Frame -> True, ImageSize -> 800,
-					PlotLabels -> Map["Hor " <> ToString[#] &, (Range[Length[timeNH]] - 1)],
+					PlotLabels -> Map["t " <> ToString[#] &, (Range[Length[timeNH]] - 1)],
 					PlotLabel -> "Time Section", 
 					LabelStyle -> Directive[18, Bold, Gray]
 ]
@@ -76,7 +87,7 @@ ListLinePlot[timeNH,
 PlotDepthSectionWithWells[horNHsorted_, wells_] := 
 ListLinePlot[horNHsorted,
 					GridLines->{wells[[All, 2]], None},
-					GridLinesStyle -> Directive[Thick, Blue],
+					GridLinesStyle -> Directive[Thick, Grey],
 					FrameStyle -> Directive[Black, 18], 
 					Filling -> Bottom, Frame -> True, ImageSize -> 800,
 					PlotLabels -> Map["Hor " <> ToString[#] &, (Range[Length[horNHsorted]] - 1)],
