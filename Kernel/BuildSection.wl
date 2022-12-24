@@ -41,7 +41,7 @@ BuildWellSet::usage =
 Begin["`Private`"]
 
 
-(* ::Section::Closed:: *)
+(* ::Section:: *)
 (*Implementation*)
 
 
@@ -114,7 +114,7 @@ Module[{
                 horNH
                 
 },
-                f[dh_] := 50 Sqrt[dh];(*\:0432 \:043f\:0430\:0440\:0430\:043c\:0435\:0442\:0440\:044b \:043f\:0435\:0440\:0435\:043d\:0435\:0441\:0442\:0438*)
+                f[dh_] := 30 Sqrt[dh];(* \:0437\:0430\:043a\:043e\:043d \:043a\:0430\:043a \:043c\:0435\:043d\:044f\:0435\:0442\:0441\:044f \:0441\:043a\:043e\:0440\:043e\:0441\:0442\:044c, \:043d\:0430\:0434\:043e \:0432 \:043f\:0430\:0440\:0430\:043c\:0435\:0442\:0440\:044b \:043f\:0435\:0440\:0435\:043d\:0435\:0441\:0442\:0438*)
                 horNH = Part[horNHsorted,All,All,-1];
                 maxH = -Min[horNHsorted[[-1]]];
                 velModel = Table[{0, 0, 0}, {i, 1, Length[horNH], 1}, {j, 1, Length[horNH[[1]]]}, {dh, 1, maxH}];
@@ -163,14 +163,18 @@ Module[{
 		h
 	},
         dx = horNHsorted[[1, 2, 1]] - horNHsorted[[1, 1, 1]];
-        timeNH=Table[{0, 0}, {i, 1, Length[horNHsorted]}, {j, 1, Length[horNHsorted[[1]]]}];
-        For[i = 1, i <= Length[horNHsorted], i++,
+        timeNH = Table[{0, 0}, {i, 1, Length[horNHsorted]}, {j, 1, Length[horNHsorted[[1]]]}];
+       
+        For[i = 1, i <= Length[horNHsorted], i++, 
            For[j = 1, j <= Length[horNHsorted[[i]]], j++,
-              v = Mean[Flatten[Part[velModel[[All]][[All, j]]][[All]][[1 ;; i, All, 3]]]];
-	          h = Sum[horNHsorted[[k, j, 2]],{k, i}];
-		      timeNH[[i]][[j]] = {j dx, N[2 h/v]}
-             ]
-        ]; 
+              If[i == 1, timeNH[[i]][[j]] = {(j - 1) dx, 0},
+                 v = Mean[Flatten[Part[velModel[[All]][[All, j]]][[All]][[1 ;; i, All, 3]]]];
+	             h = Abs[horNHsorted[[i, j, 2]]];
+		         timeNH[[i]][[j]] = {(j - 1) dx, -N[2 h/v]}
+                ]
+              ]
+           ];
+            
         Return[<|"timeNH" -> timeNH|>]
 ]
 
