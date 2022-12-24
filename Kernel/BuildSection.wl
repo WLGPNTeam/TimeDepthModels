@@ -15,7 +15,7 @@ BeginPackage["WLGPNTeam`TimeDepthModels`"]
 (*Names*)
 
 
-ClearAll[BuildDepthSection, BuildVelocitySection, BuildTimeSection]
+ClearAll[BuildDepthSection, BuildVelocitySection, BuildTimeSection, BuildWellSet]
 
 
 BuildDepthSection::usage = 
