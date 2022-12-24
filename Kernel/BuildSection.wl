@@ -48,25 +48,34 @@ Begin["`Private`"]
 BuildDepthSection[listH_, alpha_, len_, dx_, anoMaxDisp_, hTapering_] := 
 Module[{
                 horNH,
-                anoStartFiltRad = 5,
-                anoARParam = {0.1, 1},
-                daySurface = Table[0, len/dx + 1],    
+                anoStartFiltRad,
+                anoARParam,
+                daySurface,    
                 rfAno,
-                localAnomaly = Table[0, len/dx + 1], 
+                localAnomaly, 
                 localAnomalyFiltered,
                 horNHsorted,
-                i = 1,
-                max,
                 listSumH,
                 table,
-                TotalH = Total[listH]
+                TotalH,
+                max,
+                i
  },
+				If[hTapering >= 1/2 ((len/dx)-anoStartFiltRad) listH[[1]]/TotalH , Return["hTapering is too big"]];
+ 
+				anoStartFiltRad = 5;
+				anoARParam = {0.1, 1};
+                daySurface = Table[0, len/dx + 1];    
+                localAnomaly = Table[0, len/dx + 1];
+                TotalH = Total[listH];
+                 
                 table =Join[{daySurface}, Table[-Sum[listH[[i]], {i, 1, i}], {i, Length[listH]}, {j, len/dx + 1}]];
                 horNH = Table[(table[[i]][[j]] - (len - (j-1) dx) Tan[alpha]), {i, Length[listH] + 1}, {j, len/dx + 1}];
                 rfAno = RandomFunction[ARProcess[{anoARParam[[1]]}, anoARParam[[2]]], {1, len+1}];
                 localAnomaly = anoMaxDisp GaussianFilter[rfAno["SliceData", Range[1, len+1, dx]], anoStartFiltRad][[1]];
                 listSumH = Join[{1}, Table[Sum[listH[[i]], {i, 1, i}], {i, 1, Length[listH]}]];
-    
+                
+                i = 1;
                 While[i < Length[horNH]+1, 
                             horNH[[-i]] += localAnomaly;
                             localAnomalyFiltered = anoMaxDisp GaussianFilter[rfAno["SliceData",Range[1, len+1, dx]],(anoStartFiltRad + hTapering TotalH/listSumH[[-i]])][[1]];
@@ -91,15 +100,15 @@ Module[{
                 horNHforVelMod,
                 startV,
                 layerthickness,
-                dx = horNHsorted[[1,2,1]] - horNHsorted[[1,1,1]],
                 horNH
                 
 },
+                dx = horNHsorted[[1,2,1]] - horNHsorted[[1,1,1]];
                 f[dh_] := 30 Sqrt[dh];(*velocity trend in layer, should be into Module params*)
-                horNH = Part[horNHsorted,All,All,-1];
+                horNH = Part[horNHsorted, All, All,-1];
                 maxH = -Min[horNHsorted[[-1]]];
                 velModel = Table[{0, 0, 0}, {i, 1, Length[horNH], 1}, {j, 1, Length[horNH[[1]]]}, {dh, 1, maxH}];
-                horNHforVelMod = Join[horNH, {Table[-(maxH + 10), {i, 1, Length[horNH[[1]]]}]}];
+                horNHforVelMod = Join[horNH, {Table[-(maxH + 1), {i, 1, Length[horNH[[1]]]}]}];
                
                 For[i = 1, i <= Length[horNHforVelMod] - 1, i++,
                     startV = listV[[i]];
