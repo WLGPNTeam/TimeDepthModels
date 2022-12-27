@@ -15,7 +15,7 @@ BeginPackage["WLGPNTeam`TimeDepthModels`"]
 (*Names*)
 
 
-ClearAll[BuildDepthSection, BuildVelocitySection, BuildTimeSection, BuildWellSet]
+ClearAll[BuildDepthSection, BuildVelocitySection, BuildTimeSection, BuildWellSet, CheckVelocity]
 
 
 BuildDepthSection::usage = 
@@ -32,6 +32,10 @@ BuildTimeSection::usage =
 
 BuildWellSet::usage = 
 "BuildWellSet[horNHsorted, timeNH, numOfWells, wellsLocation]"
+
+
+CheckVelocity::usage = 
+"CheckVelocity[datasetWells]"
 
 
 (* ::Section::Closed:: *)
@@ -178,21 +182,63 @@ Module[{
              If[wellsLocation == "regular",
                             positions = Table[{Range[2, len/dx, Round[len/dx/numOfWells]][[i]], 0},{i, numOfWells}],
                             If[wellsLocation == "random",
-                                positions = Table[{RandomSample[Range[2, len/dx, 3], numOfWells][[i]], 0},{i, numOfWells}],
+                                positions = Table[{RandomSample[Range[2, len/dx, 3], numOfWells][[i]], 0},{i, numOfWells}], (*povtory!!!*)
                                 Print["wellsLocation undefined"]
                             ]
                         ]
                     ]
                 ];
                
-                Print[positions];
                 wellsNums = Table[Table[{Range[1, Length[positions]][[j]], dx (positions[[j, 1]]-1)},{i,Length[horNHsorted]}],{j, Length[positions]}];
                 Table[lm[i_, x_]:={Interpolation[horNHsorted[[i]], x], Interpolation[timeNH[[i]], x]},{i, Length[horNHsorted]}];
-                wells = Flatten[Table[Table[{wellsNums[[k, i, 1]], wellsNums[[k, i, 2]], StringJoin["Hor ", ToString[i]], N[lm[i, k][[1]]], N[lm[i, k][[2]]]},{i, Length[horNHsorted]}],{k, Length[positions]}],1];
-				assocWells = Map[<|"well" -> #[[1]], "x" -> #[[2]], "hor" -> #[[3]], "depth" -> #[[4]], "time" -> #[[5]]|>&, wells];
+                wells = Flatten[Table[Table[{wellsNums[[k, i, 1]], wellsNums[[k, i, 2]], i, N[lm[i, k][[1]]], N[lm[i, k][[2]]]},{i, Length[horNHsorted]}],{k, Length[positions]}],1];
+				assocWells = Map[<|"well" -> #[[1]], "x" -> #[[2]], "horizon" -> #[[3]], "depth" -> #[[4]], "time" -> #[[5]]|>&, wells];
 				datasetWells = Dataset[assocWells];
 				
                 Return[<|"wells" -> wells, "datasetWells" -> datasetWells|>]
+]
+
+CheckVelocity[datasetWells_]:= 
+Module[{
+                dt,
+                dh,
+                listVint,
+                valuesWells,
+                valuesWellsPart,
+                keysWells,
+                i,
+                j,
+                numOfWells,
+                firstWell,
+                firstHor,
+                numOfHor,
+                assocVint,
+                datasetVint
+                
+},
+
+                valuesWells = Normal[Values[datasetWells]];
+                
+                numOfWells = valuesWells[[-1, 1]];
+                firstWell = valuesWells[[1, 1]];
+                firstHor = valuesWells[[1, 3]];
+                numOfHor = Max[valuesWells[[All, 3]]];
+                listVint = Table[{0, 0, 0, 0, 0}, {i, 1, numOfWells}, {j, 1, numOfHor - 1}];
+
+                For[i = firstWell, i <= numOfWells, i++,
+                    valuesWellsPart = Select[valuesWells, #[[1]] == i& ];
+                    For[j = firstHor, j <= numOfHor - 1, j++,
+                        dh = valuesWellsPart [[j + 1, 4]] - valuesWellsPart [[j, 4]]; 
+                        dt = valuesWellsPart [[j + 1, 5]] - valuesWellsPart [[j, 5]];
+                        listVint[[i]][[j]] = {i, j, dh, dt, dh/dt}
+                        ]
+                    ];
+                
+                listVint = Flatten[listVint, 1];
+				assocVint = Map[<|"well" -> #[[1]], "x" -> #[[2]], "dh" -> #[[3]], "dt" -> #[[4]], "Vint" -> #[[5]]|>&, listVint];
+				datasetVint = Dataset[assocVint];
+				
+                Return[<|"datasetVint" -> datasetVint|>]
 ]
 
 
