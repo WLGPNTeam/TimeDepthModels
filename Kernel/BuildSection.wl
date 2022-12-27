@@ -131,8 +131,9 @@ Module[{
                 dx,
                 i,
                 j,
-                v,
-                h
+                dv,
+                dh,
+				dt
 },
                 dx = horNHsorted[[1, 2, 1]] - horNHsorted[[1, 1, 1]];
                 timeNH = Table[{0, 0}, {i, 1, Length[horNHsorted]}, {j, 1, Length[horNHsorted[[1]]]}];
@@ -140,9 +141,10 @@ Module[{
                 For[i = 1, i <= Length[horNHsorted], i++, 
                 For[j = 1, j <= Length[horNHsorted[[i]]], j++,
                     If[i == 1, timeNH[[i]][[j]] = {(j - 1) dx, 0},
-                        v = Mean[Flatten[Part[velModel[[All]][[All, j]]][[All]][[1 ;; i, All, 3]]]];
-                        h = Abs[horNHsorted[[i, j, 2]]];
-                        timeNH[[i]][[j]] = {(j - 1) dx, -N[2 h/v]}
+                        dv = Table[Mean[Flatten[Part[velModel[[All]][[All, j]]][[All]][[k, All, 3]]]],{k, i}];
+                        dh = Table[Abs[horNHsorted[[k, j, 2]]],{k,i}];
+                        If[Length[dh]==Length[dv],dt=N[-2dh/dv],Return["mistake"]];
+                        timeNH[[i]][[j]] = {(j - 1) dx, Total[dt]}
                         ]
                     ]
                 ];
@@ -158,16 +160,22 @@ Module[{
                 len,
                 i,
                 k,
-                lm
+                lm,
+                wellsNums,
+                assocWells,
+                datasetWells
 },
+                
                 dx = horNHsorted[[1, 2, 1]] - horNHsorted[[1, 1, 1]];
                 len = horNHsorted[[1, -1, 1]];
                 
                 If[wellsLocation == "max",
-                    positions = FindPeaks[horNHsorted[[-1]][[All, 2]], 2],
+                    positions = Round[FindPeaks[horNHsorted[[-1]][[All, 2]], 2]];
+                    If[positions == {}, Return["No peaks!"], If[Length[positions] > numOfwells, positions = Sort[RandomSample[positions, numOfwells]]]],
                     If[wellsLocation == "min", 
-                        positions = FindPeaks[-horNHsorted[[-1]][[All, 2]],2],
-                        If[wellsLocation == "regular",
+                        positions = Round[FindPeaks[-horNHsorted[[-1]][[All, 2]], 2]];
+             If[positions == {}, Return["No peaks!"], If[Length[positions] > numOfwells, positions = Sort[RandomSample[positions, numOfwells]]]],
+             If[wellsLocation == "regular",
                             positions = Table[{Range[2, len/dx, Round[len/dx/numOfWells]][[i]], 0},{i, numOfWells}],
                             If[wellsLocation == "random",
                                 positions = Table[{RandomSample[Range[2, len/dx, 3], numOfWells][[i]], 0},{i, numOfWells}],
@@ -176,11 +184,15 @@ Module[{
                         ]
                     ]
                 ];
-                
+               
+                Print[positions];
+                wellsNums = Table[Table[{Range[1, Length[positions]][[j]], dx (positions[[j, 1]]-1)},{i,Length[horNHsorted]}],{j, Length[positions]}];
                 Table[lm[i_, x_]:={Interpolation[horNHsorted[[i]], x], Interpolation[timeNH[[i]], x]},{i, Length[horNHsorted]}];
-                wells = Table[{k, dx (positions[[k, 1]]-1), Table[{StringJoin["Hor ", ToString[i]], N[lm[i, k][[1]]], N[lm[i, k][[2]]]},{i, Length[horNHsorted]}]},{k, Length[positions]}];
-
-                Return[<|"wells" -> wells|>]
+                wells = Flatten[Table[Table[{wellsNums[[k, i, 1]], wellsNums[[k, i, 2]], StringJoin["Hor ", ToString[i]], N[lm[i, k][[1]]], N[lm[i, k][[2]]]},{i, Length[horNHsorted]}],{k, Length[positions]}],1];
+				assocWells = Map[<|"well" -> #[[1]], "x" -> #[[2]], "hor" -> #[[3]], "depth" -> #[[4]], "time" -> #[[5]]|>&, wells];
+				datasetWells = Dataset[assocWells];
+				
+                Return[<|"wells" -> wells, "datasetWells" -> datasetWells|>]
 ]
 
 

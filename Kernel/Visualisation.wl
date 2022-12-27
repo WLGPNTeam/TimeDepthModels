@@ -84,10 +84,10 @@ ListLinePlot[timeNH,
 ]
 
 
-PlotDepthSectionWithWells[horNHsorted_, wells_] := 
+PlotDepthSectionWithWells[horNHsorted_, datasetWells_] := 
 ListLinePlot[horNHsorted,
-					GridLines->{wells[[All, 2]], None},
-					GridLinesStyle -> Directive[Thick, Grey],
+					GridLines->{DeleteDuplicates[Normal[datasetWells[All, "x"]]], None},
+					GridLinesStyle -> Directive[Thick, Gray],
 					FrameStyle -> Directive[Black, 18], 
 					Filling -> Bottom, Frame -> True, ImageSize -> 800,
 					PlotLabels -> Map["Hor " <> ToString[#] &, (Range[Length[horNHsorted]] - 1)],
