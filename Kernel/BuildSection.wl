@@ -38,6 +38,10 @@ CheckVelocity::usage =
 "CheckVelocity[datasetWells]"
 
 
+HT::usage = 
+"HT[datasetWells, t]"
+
+
 (* ::Section::Closed:: *)
 (*Private context*)
 
@@ -93,12 +97,14 @@ Module[{
                 Return[<|"horNH" -> horNH, "horNHsorted" -> horNHsorted|>]
 ]
 
+
 BuildVelocitySection[horNHsorted_, listV_] := 
 Module[{
                 velModel,
                 i, 
                 j, 
                 dh,
+                dx,
                 f,
                 maxH,
                 horNHforVelMod,
@@ -107,9 +113,9 @@ Module[{
                 horNH
                 
 },
-                dx = horNHsorted[[1,2,1]] - horNHsorted[[1,1,1]];
+                dx = horNHsorted[[1, 2, 1]] - horNHsorted[[1, 1, 1]];
                 f[dh_] := 30 Sqrt[dh];(*velocity trend in layer, should be into Module params*)
-                horNH = Part[horNHsorted, All, All,-1];
+                horNH = Part[horNHsorted, All, All, -1];
                 maxH = -Min[horNHsorted[[-1]]];
                 velModel = Table[{0, 0, 0}, {i, 1, Length[horNH], 1}, {j, 1, Length[horNH[[1]]]}, {dh, 1, maxH}];
                 horNHforVelMod = Join[horNH, {Table[-(maxH + 1), {i, 1, Length[horNH[[1]]]}]}];
@@ -129,6 +135,7 @@ Module[{
                 <|"velModel" -> velModel|>
 ]
 
+
 BuildTimeSection[horNHsorted_, velModel_] := 
 Module[{
                 timeNH,
@@ -145,9 +152,9 @@ Module[{
                 For[i = 1, i <= Length[horNHsorted], i++, 
                 For[j = 1, j <= Length[horNHsorted[[i]]], j++,
                     If[i == 1, timeNH[[i]][[j]] = {(j - 1) dx, 0},
-                        dv = Table[Mean[Flatten[Part[velModel[[All]][[All, j]]][[All]][[k, All, 3]]]],{k, i}];
-                        dh = Table[Abs[horNHsorted[[k, j, 2]]],{k,i}];
-                        If[Length[dh]==Length[dv],dt=N[-2dh/dv],Return["mistake"]];
+                        dv = Table[Mean[Flatten[Part[velModel[[All]][[All, j]]][[All]][[k, All, 3]]]], {k, i}];
+                        dh = Table[Abs[horNHsorted[[k, j, 2]]],{k, i}];
+                        If[Length[dh] == Length[dv], dt = Abs[N[2 dh/dv]], Return["mistake"]];
                         timeNH[[i]][[j]] = {(j - 1) dx, Total[dt]}
                         ]
                     ]
@@ -155,6 +162,7 @@ Module[{
                 
                 Return[<|"timeNH" -> timeNH|>]
 ]
+
 
 BuildWellSet[horNHsorted_ ,timeNH_, numOfWells_, wellsLocation_] := 
 Module[{
@@ -164,7 +172,7 @@ Module[{
                 len,
                 i,
                 k,
-                lm,
+                lmHandT,
                 wellsNums,
                 assocWells,
                 datasetWells
@@ -175,28 +183,28 @@ Module[{
                 
                 If[wellsLocation == "max",
                     positions = Round[FindPeaks[horNHsorted[[-1]][[All, 2]], 2]];
-                    If[positions == {}, Return["No peaks!"], If[Length[positions] > numOfwells, positions = Sort[RandomSample[positions, numOfwells]]]],
+                    If[positions == {}, Return["No peaks!"], If[Length[positions] > numOfWells, positions = Sort[RandomSample[positions, numOfWells]]]],
                     If[wellsLocation == "min", 
                         positions = Round[FindPeaks[-horNHsorted[[-1]][[All, 2]], 2]];
-             If[positions == {}, Return["No peaks!"], If[Length[positions] > numOfwells, positions = Sort[RandomSample[positions, numOfwells]]]],
+             If[positions == {}, Return["No peaks!"], If[Length[positions] > numOfWells, positions = Sort[RandomSample[positions, numOfWells]]]],
              If[wellsLocation == "regular",
-                            positions = Table[{Range[2, len/dx, Round[len/dx/numOfWells]][[i]], 0},{i, numOfWells}],
+                            positions = Table[{Range[2, len/dx, Round[len/dx/numOfWells]][[i]], 0}, {i, numOfWells}],
                             If[wellsLocation == "random",
-                                positions = Table[{RandomSample[Range[2, len/dx, 3], numOfWells][[i]], 0},{i, numOfWells}], (*povtory!!!*)
+                                positions = Table[{RandomSample[Range[2, len/dx, 3], numOfWells][[i]], 0}, {i, numOfWells}], (*mb povtory !!!*)
                                 Print["wellsLocation undefined"]
                             ]
                         ]
                     ]
                 ];
                
-                wellsNums = Table[Table[{Range[1, Length[positions]][[j]], dx (positions[[j, 1]]-1)},{i,Length[horNHsorted]}],{j, Length[positions]}];
-                Table[lm[i_, x_]:={Interpolation[horNHsorted[[i]], x], Interpolation[timeNH[[i]], x]},{i, Length[horNHsorted]}];
-                wells = Flatten[Table[Table[{wellsNums[[k, i, 1]], wellsNums[[k, i, 2]], i, N[lm[i, k][[1]]], N[lm[i, k][[2]]]},{i, Length[horNHsorted]}],{k, Length[positions]}],1];
+                wellsNums = Table[Table[{Range[1, Length[positions]][[j]], dx (positions[[j, 1]] - 1)}, {i, Length[horNHsorted]}], {j, Length[positions]}];
+                wells = Flatten[Table[Table[{wellsNums[[k, i, 1]], wellsNums[[k, i, 2]], i, N[Interpolation[horNHsorted[[i]], dx positions[[k, 1]]]], N[Interpolation[timeNH[[i]], dx positions[[k, 1]]]]},{i, Length[horNHsorted]}],{k, Length[positions]}], 1];
 				assocWells = Map[<|"well" -> #[[1]], "x" -> #[[2]], "horizon" -> #[[3]], "depth" -> #[[4]], "time" -> #[[5]]|>&, wells];
 				datasetWells = Dataset[assocWells];
 				
-                Return[<|"wells" -> wells, "datasetWells" -> datasetWells|>]
+                Return[<|"wells" -> wells, "datasetWells" -> datasetWells, "positions" -> positions[[All, 1]]|>]
 ]
+
 
 CheckVelocity[datasetWells_]:= 
 Module[{
@@ -230,7 +238,7 @@ Module[{
                     For[j = firstHor, j <= numOfHor - 1, j++,
                         dh = valuesWellsPart [[j + 1, 4]] - valuesWellsPart [[j, 4]]; 
                         dt = valuesWellsPart [[j + 1, 5]] - valuesWellsPart [[j, 5]];
-                        listVint[[i]][[j]] = {i, j, dh, dt, dh/dt}
+                        listVint[[i]][[j]] = {i, j, dh, dt, Abs[dh/dt]}
                         ]
                     ];
                 
@@ -239,6 +247,21 @@ Module[{
 				datasetVint = Dataset[assocVint];
 				
                 Return[<|"datasetVint" -> datasetVint|>]
+]
+
+
+HT[datasetWells_, t_]:= 
+Module[{
+                dataWellsHT,
+                lmSet,
+                lmDS,
+                i
+},               
+	
+                dataWellsHT = Table[Values[Normal[datasetWells[Select[#horizon == i&]][[All, {5, 4}]]]], {i, Max[datasetWells[All, 3]]}];
+                lmSet = Table[LinearModelFit[dataWellsHT[[i]], t, t],{i, 1, Length[dataWellsHT]}];	
+
+                Return[<|"lmSet" -> lmSet, "dataWellsHT" -> dataWellsHT|>]
 ]
 
 
