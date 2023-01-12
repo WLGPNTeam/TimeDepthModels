@@ -137,7 +137,7 @@ Module[{
 ]
 
 
-PlotVT[setVT_,lmSet_, t_]:= 
+PlotVT[setVT_, lmSet_, t_]:= 
 Module[{
 				plots,
 				tmin,
@@ -146,10 +146,10 @@ Module[{
 },
 				tmin = Table[Min[setVT[[i]][[All,2]]], {i, Length[setVT]}];
 				tmax = Table[Max[setVT[[i]][[All,2]]], {i, Length[setVT]}];
-				plots = Table[Show[ListPlot[setVT[[i]][[All,2;;3]], ImageSize -> 500,
+				plots = Table[Show[ListPlot[setVT[[i]][[All, 2;;3]], ImageSize -> 500,
 												PlotLabel -> StringJoin["Horizon ",ToString[i - 1],". v = f(t)"],
 												LabelStyle -> Directive[14, Gray],
-												GridLines -> {setVT[[i]][[All,2]],setVT[[i]][[All, 3]]}
+												GridLines -> {setVT[[i]][[All,2]], setVT[[i]][[All, 3]]}
 									],
 									Plot[lmSet[[i]][t], {t, tmin[[i]], tmax[[i]]}], 
 									

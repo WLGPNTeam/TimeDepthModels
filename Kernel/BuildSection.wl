@@ -39,7 +39,7 @@ CheckVelocity::usage =
 
 
 HT::usage = 
-"HT[datasetWells, t]"
+"HT[datasetWells, timeNH, t]"
 
 
 VT::usage = 
@@ -256,24 +256,32 @@ Module[{
 ]
 
 
-HT[datasetWells_, t_]:= 
+HT[datasetWells_, timeNH_, t_]:= 
 Module[{
                 dataWellsHT,
                 lmSet,
-                i
+                i,
+                ht,
+                fitParams,
+                dx,
+                len
 },               
-	
+				dx = timeNH[[1, 2, 1]];
+	            len = timeNH[[1, -1, 1]];
                 dataWellsHT = Table[Values[Normal[datasetWells[Select[#horizon == i&]][[All, {5, 4}]]]], {i, Max[datasetWells[All, 3]]}];
                 lmSet = Table[LinearModelFit[dataWellsHT[[i]], t, t], {i, 1, Length[dataWellsHT]}];	
+                
+                fitParams = Table[lmSet[[i]]["BestFitParameters"], {i, Length[lmSet]}];
+                ht = Table[Table[{(j - 1) dx, (-fitParams[[i, 1]] * timeNH[[i, j, 2]] - fitParams[[i, 2]])}, {j, len/dx}], {i, Length[timeNH]}];
 
-                Return[<|"lmSet" -> lmSet, "dataWellsHT" -> dataWellsHT|>]
+                Return[<|"lmSet" -> lmSet, "dataWellsHT" -> dataWellsHT, "ht" -> ht, "fitParams" -> fitParams|>]
 ]
 
 
-VT[datasetWells_,datasetVelModel_,timeNH_,t_]:= 
+VT[datasetWells_, datasetVelModel_, timeNH_,t_]:= 
 Module[{
                 wellsXTH,
-                lmSetVT,
+                lmSet,
                 i,
                 j,
                 setVT,
@@ -286,25 +294,24 @@ Module[{
                 len,
                 atbt
 },               
-	            dx = timeNH[[1,2,1]];
-	            len = timeNH[[1,-1,1]];
-	  
-                wellsXTH = Table[Values[Normal[datasetWells[Select[#horizon == i&]][[All, {2, 5, 4}]]]], {i, Max[datasetWells[All, 3]]}];
-                setVT=Table[Table[{i,wellsXTH[[i,j,2]],0},{j,Length[wellsXTH[[i]]]}],{i,Length[wellsXTH]}];
-                For[i = 1, i<=Length[wellsXTH], i++,
-                    For[j = 1, j<=Length[wellsXTH[[i]]], j++,
-                        x =wellsXTH[[i,j, 1]];
-                        h =wellsXTH[[i,j, 3]];
-                        v = Flatten[Values[Normal[datasetVelModel[Select[(#layer == i && #x == Round[x]&& #h == Round[h]) &]]]], 2];
-                        setVT[[i,j,3]]=v[[4]]
+	            dx = timeNH[[1, 2, 1]];
+	            len = timeNH[[1, -1, 1]];
+	            wellsXTH = Table[Values[Normal[datasetWells[Select[#horizon == i&]][[All, {2, 5, 4}]]]], {i, Max[datasetWells[All, 3]]}];
+                setVT=Table[Table[{i, wellsXTH[[i, j, 2]],0},{j, Length[wellsXTH[[i]]]}], {i, Length[wellsXTH]}];
+                For[i = 1, i <= Length[wellsXTH], i++,
+                    For[j = 1, j <= Length[wellsXTH[[i]]], j++,
+                        x = wellsXTH[[i, j, 1]];
+                        h = wellsXTH[[i, j, 3]];
+                        v = Flatten[Values[Normal[datasetVelModel[Select[(#layer == i && #x == Round[x] && #h == Round[h]) &]]]], 2];
+                        setVT[[i, j, 3]]= v[[4]]
                         ]
                     ];
  
-		        lmSetVT = Table[LinearModelFit[setVT[[i]][[All,2;;3]], t, t], {i, 1, Length[setVT]}];
-                fitParams=Table[lmSetVT[[i]]["BestFitParameters"],{i,Length[lmSetVT]}];
-                atbt =Table[Table[{(j-1)dx,(fitParams[[i,1]] * timeNH[[i,j,2]]^2+fitParams[[i,2]]* timeNH[[i,j,2]])},{j,len/dx}],{i,Length[timeNH]}];
+		        lmSet = Table[LinearModelFit[setVT[[i]][[All, 2;;3]], t, t], {i, 1, Length[setVT]}];
+                fitParams = Table[lmSet[[i]]["BestFitParameters"], {i, Length[lmSet]}];
+                atbt = Table[Table[{(j - 1) dx, (-fitParams[[i, 1]] * timeNH[[i, j, 2]]^2 -fitParams[[i, 2]] * timeNH[[i, j, 2]])}, {j, len/dx}], {i, Length[timeNH]}];
 	
-                Return[<| "lmSetVT" -> lmSetVT,"setVT" -> setVT , "atbt"->atbt,"fitParams"->fitParams|>]
+                Return[<| "lmSet" -> lmSet, "setVT" -> setVT , "atbt" -> atbt, "fitParams" -> fitParams |>]
 ]
 
 
