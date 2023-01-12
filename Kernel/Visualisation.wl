@@ -35,7 +35,11 @@ PlotDepthSectionWithWells::usage =
 
 
 PlotHT::usage = 
-"PlotHT[dataWellsHT,lmSet, t]"
+"PlotHT[dataWellsHT, lmSet, t]"
+
+
+PlotVT::usage = 
+"PlotVT[setVT, lmSet, t]"
 
 
 (* ::Section:: *)
@@ -51,26 +55,26 @@ Begin["`Private`"]
 
 PlotDepthSection[horNHsorted_] := 
 ListLinePlot[horNHsorted,
-					FrameStyle -> Directive[14, Black], 
-					Filling -> Bottom, Frame -> True, ImageSize -> 500,
-					PlotLabels -> Map["Hor " <> ToString[#] &, (Range[Length[horNHsorted]] - 1)],
-					PlotLabel -> "Depth Section", 
-					LabelStyle -> Directive[14, Gray]
+				FrameStyle -> Directive[14, Black], 
+				Filling -> Bottom, Frame -> True, ImageSize -> 500,
+				PlotLabels -> Map["Hor " <> ToString[#] &, (Range[Length[horNHsorted]] - 1)],
+				PlotLabel -> "Depth Section", 
+				LabelStyle -> Directive[14, Gray]
 ]
 
 
 PlotVelocity[velModel_, horNHsorted_] :=
-Show[ListContourPlot[Flatten[velModel, 2], 
-									ColorFunction -> ColorData[{"RedBlueTones", "Reverse"}],
-									PlotLegends -> BarLegend[Automatic, LegendLabel -> "Vel, m/s"],
-									PlotLabel -> "Velocity Distribution"
+Show[ListContourPlot[Flatten[velModel, 2][[All, 2 ;; 4]], 
+						ColorFunction -> ColorData[{"RedBlueTones", "Reverse"}],
+						PlotLegends -> BarLegend[Automatic, LegendLabel -> "Vel, m/s"],
+						PlotLabel -> "Velocity Distribution"
 									],
 			ListLinePlot[horNHsorted, 
-									PlotStyle -> {Directive[Thickness[0.005], Black]},
-									PlotLabel->"Velocity Distribution",
-									PlotLabels -> Map["Hor " <> ToString[#] &, (Range[Length[horNHsorted]] - 1)],
-									LabelStyle -> Directive[14, Gray],  
-									ImageSize -> 500
+							PlotStyle -> {Directive[Thickness[0.005], Black]},
+							PlotLabel->"Velocity Distribution",
+							PlotLabels -> Map["Hor " <> ToString[#] &, (Range[Length[horNHsorted]] - 1)],
+							LabelStyle -> Directive[14, Gray],  
+							ImageSize -> 500
 									], 
 			Frame -> True,
 			FrameStyle -> Directive[14, Black],
@@ -97,17 +101,17 @@ Module[{
 
 PlotDepthSectionWithWells[horNHsorted_, datasetWells_] := 
 ListLinePlot[horNHsorted,
-					GridLines->{DeleteDuplicates[Normal[datasetWells[All, "x"]]], None},
-					GridLinesStyle -> Directive[Thick, Gray],
-					FrameStyle -> Directive[14, Black], 
-					Filling -> Bottom, Frame -> True, ImageSize -> 500,
-					PlotLabels -> Map["Hor " <> ToString[#] &, (Range[Length[horNHsorted]] - 1)],
-					PlotLabel -> "Depth Section with wells", 
-					LabelStyle -> Directive[14, Gray]
+				GridLines->{DeleteDuplicates[Normal[datasetWells[All, "x"]]], None},
+				GridLinesStyle -> Directive[Thick, Gray],
+				FrameStyle -> Directive[14, Black], 
+				Filling -> Bottom, Frame -> True, ImageSize -> 500,
+				PlotLabels -> Map["Hor " <> ToString[#] &, (Range[Length[horNHsorted]] - 1)],
+				PlotLabel -> "Depth Section with wells", 
+				LabelStyle -> Directive[14, Gray]
 ]
 
 
-PlotHT[dataWellsHT_,lmSet_, t_]:= 
+PlotHT[dataWellsHT_, lmSet_, t_]:= 
 Module[{
 				plots,
 				tmin,
@@ -130,6 +134,31 @@ Module[{
 
 				Return[plots]
 	
+]
+
+
+PlotVT[setVT_, lmSet_, t_]:= 
+Module[{
+				plots,
+				tmin,
+				tmax,
+				i
+},
+				tmin = Table[Min[setVT[[i]][[All,2]]], {i, Length[setVT]}];
+				tmax = Table[Max[setVT[[i]][[All,2]]], {i, Length[setVT]}];
+				plots = Table[Show[ListPlot[setVT[[i]][[All, 2;;3]], ImageSize -> 500,
+												PlotLabel -> StringJoin["Horizon ",ToString[i - 1],". v = f(t)"],
+												LabelStyle -> Directive[14, Gray],
+												GridLines -> {setVT[[i]][[All,2]], setVT[[i]][[All, 3]]}
+									],
+									Plot[lmSet[[i]][t], {t, tmin[[i]], tmax[[i]]}], 
+									
+									Frame -> True,
+									FrameStyle -> Directive[14, Black],
+									FrameLabel -> {"t, s", "v, m"}], {i, 2, Length[setVT]}
+							];
+
+				Return[plots]
 ]
 
 
