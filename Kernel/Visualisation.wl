@@ -53,8 +53,9 @@ Begin["`Private`"]
 (*Implementation*)
 
 
-PlotDepthSection[horNHsorted_] := 
+PlotDepthSection[horNHsorted_,opts:OptionsPattern[ListLinePlot]] := 
 ListLinePlot[horNHsorted,
+				opts,
 				FrameStyle -> Directive[14, Black], 
 				Filling -> Bottom, Frame -> True, ImageSize -> 500,
 				PlotLabels -> Map["Hor " <> ToString[#] &, (Range[Length[horNHsorted]] - 1)],
@@ -63,13 +64,28 @@ ListLinePlot[horNHsorted,
 ]
 
 
-PlotVelocity[velModel_, horNHsorted_] :=
+PlotDepthSection[horNHsorted_,datasetWells_, opts:OptionsPattern[ListLinePlot]] := 
+ListLinePlot[horNHsorted,
+				opts,
+				GridLines->{DeleteDuplicates[Normal[datasetWells[All, "x"]]], None},
+				GridLinesStyle -> Directive[Thick, Gray],
+				FrameStyle -> Directive[14, Black], 
+				Filling -> Bottom, Frame -> True, ImageSize -> 500,
+				PlotLabels -> Map["Hor " <> ToString[#] &, (Range[Length[horNHsorted]] - 1)],
+				PlotLabel -> "Depth Section with wells", 
+				LabelStyle -> Directive[14, Gray]
+]
+
+
+PlotVelocity[velModel_, horNHsorted_,opts:OptionsPattern[{ListLinePlot,ListContourPlot}]] :=
 Show[ListContourPlot[Flatten[velModel, 2][[All, 2 ;; 4]], 
+						FilterRules[opts,Options[ListContourPlot]],
 						ColorFunction -> ColorData[{"RedBlueTones", "Reverse"}],
 						PlotLegends -> BarLegend[Automatic, LegendLabel -> "Vel, m/s"],
 						PlotLabel -> "Velocity Distribution"
 									],
 			ListLinePlot[horNHsorted, 
+							FilterRules[opts,Options[ListLinePlot]],
 							PlotStyle -> {Directive[Thickness[0.005], Black]},
 							PlotLabel->"Velocity Distribution",
 							PlotLabels -> Map["Hor " <> ToString[#] &, (Range[Length[horNHsorted]] - 1)],

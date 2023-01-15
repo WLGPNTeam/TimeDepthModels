@@ -203,8 +203,8 @@ Module[{
                 ]
                 ];
                
-                wellsNums = Table[Table[{Range[1, Length[positions]][[j]], dx (positions[[j, 1]] - 1)}, {i, Length[horNHsorted]}], {j, Length[positions]}];
-                wells = Flatten[Table[Table[{wellsNums[[k, i, 1]], wellsNums[[k, i, 2]], i, N[Interpolation[horNHsorted[[i]], dx (positions[[k, 1]]-1)]], N[Interpolation[timeNH[[i]], dx (positions[[k, 1]]-1)]]},{i, Length[horNHsorted]}],{k, Length[positions]}], 1];
+                wellsNums = Table[Table[{Range[1, Length[positions]][[j]], dx *(positions[[j, 1]] - 1)}, {i, Length[horNHsorted]}], {j, Length[positions]}];
+                wells = Flatten[Table[Table[{wellsNums[[k, i, 1]], wellsNums[[k, i, 2]], i, N[Interpolation[horNHsorted[[i]], dx *(positions[[k, 1]]-1)]], N[Interpolation[timeNH[[i]], dx *(positions[[k, 1]]-1)]]},{i, Length[horNHsorted]}],{k, Length[positions]}], 1];
 				assocWells = Map[<|"well" -> #[[1]], "x" -> #[[2]], "horizon" -> #[[3]], "depth" -> #[[4]], "time" -> #[[5]]|>&, wells];
 				datasetWells = Dataset[assocWells];
 				
