@@ -352,7 +352,7 @@ Module[{
 				
 				resultVT = Join[{relief}, Table[Table[{fitsVT[[i, j, 1]], (fitsVT[[i, j, 2]] + interpolationErrors[[i, j, 2]])}, {j, len/dx}], {i, Length[fitParams]}]];
 				
-                Return[<| "lmSet" -> lmSet, "setVT" -> setVT , "atbt" -> atbt, "fitParams" -> fitParams, "resultVT" -> resultVT |>]
+                Return[<| "lmSet" -> lmSet, "setVT" -> setVT , "fitParams" -> fitParams, "resultVT" -> resultVT |>]
 ]
 
 
