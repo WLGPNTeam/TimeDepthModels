@@ -193,25 +193,25 @@ Module[{
                 len = horNH[[1, -1, 1]];
                 
                 If[wellsLocation == "max",
-                    positions = Round[FindPeaks[horNH[[-1]][[All, 2]], 2]];
+                    positions = Round[FindPeaks[horNH[[-1]][[All, 2]], 2]][[All, 1]];
                     If[positions == {}, Return["No peaks!"], If[Length[positions] > numOfWells, positions = Sort[RandomSample[positions, numOfWells]]]],
                     If[wellsLocation == "min", 
-                        positions = Round[FindPeaks[-horNH[[-1]][[All, 2]], 2]];
+                        positions = Round[FindPeaks[-horNH[[-1]][[All, 2]], 2]][[All, 1]];
                         If[positions == {}, Return["No peaks!"], If[Length[positions] > numOfWells, positions = Sort[RandomSample[positions, numOfWells]]]],
                         If[wellsLocation == "regular",
-                            positions = Table[{Range[2, len/dx, Round[len/dx/numOfWells]][[i]], 0}, {i, numOfWells}],
+                            positions = Range[Round[len/dx/numOfWells/2], len/dx, Round[len/dx/numOfWells]],
                             If[wellsLocation == "random",
-                                positions = Table[{RandomSample[Range[2, len/dx, 3], numOfWells][[i]], 0}, {i, numOfWells}], (*mb povtory !!!*)
+                                positions = Sort[RandomSample[Range[1, len/dx, 1], numOfWells]], (*mb povtory !!!*)
                                 Print["wellsLocation undefined"]]]
                 ]
                 ];
                
-                wellsNums = Table[Table[{Range[1, Length[positions]][[j]], dx *(positions[[j, 1]] - 1)}, {i, Length[horNH]}], {j, Length[positions]}];
-                wells = Flatten[Table[Table[{wellsNums[[k, i, 1]], wellsNums[[k, i, 2]], i, N[Interpolation[horNH[[i]], dx *(positions[[k, 1]]-1)]], N[Interpolation[timeNH[[i]], dx *(positions[[k, 1]]-1)]]},{i, Length[horNH]}],{k, Length[positions]}], 1];
+                wellsNums = Table[Table[{Range[1, Length[positions]][[j]], dx *(positions[[j]] - 1)}, {i, Length[horNH]}], {j, Length[positions]}];
+                wells = Flatten[Table[Table[{wellsNums[[k, i, 1]], wellsNums[[k, i, 2]], i, N[Interpolation[horNH[[i]], dx *(positions[[k]] - 1)]], N[Interpolation[timeNH[[i]], dx *(positions[[k]]-1)]]}, {i, Length[horNH]}],{k, Length[positions]}], 1];
 				assocWells = Map[<|"well" -> #[[1]], "x" -> #[[2]], "horizon" -> #[[3]], "depth" -> #[[4]], "time" -> #[[5]]|>&, wells];
 				datasetWells = Dataset[assocWells];
 				
-                Return[<|"wells" -> wells, "datasetWells" -> datasetWells, "positions" -> positions[[All, 1]]|>]
+                Return[<|"wells" -> wells, "datasetWells" -> datasetWells, "positions" -> dx positions|>]
 ]
 
 

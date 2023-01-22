@@ -133,7 +133,7 @@ Module[{
 									
 									Frame -> True,
 									FrameStyle -> Directive[14, Black],
-									FrameLabel -> {"t, s", "v, m"}], {i, 2, Length[setVT]}
+									FrameLabel -> {"t, s", "v, m"}], {i, Length[setVT]}
 							];
 
 				Return[plots]
