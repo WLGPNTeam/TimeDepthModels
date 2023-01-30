@@ -15,23 +15,19 @@ BeginPackage["WLGPNTeam`TimeDepthModels`"]
 (*Names*)
 
 
-ClearAll[PlotDepthSection, PlotVelocity, PlotTimeSection, PlotDepthSectionWithWells]
+ClearAll[PlotDepthSection, PlotVelocity, PlotTimeSection, PlotHT, PlotVT]
 
 
 PlotDepthSection::usage = 
-"PlotDepthSection[horNHsorted]"
+"PlotDepthSection[horNH, opts:OptionsPattern[ListLinePlot]]"
 
 
 PlotVelocity::usage = 
-"PlotVelocity[velModel, horNHsorted]"
+"PlotVelocity[velModel, horNH, opts:OptionsPattern[{ListLinePlot, ListContourPlot}]]"
 
 
 PlotTimeSection::usage = 
-"PlotTimeSection[timeNH]"
-
-
-PlotDepthSectionWithWells::usage = 
-"PlotDepthSectionWithWells[horNHsorted, wells]"
+"PlotTimeSection[timeNH, opts:OptionsPattern[ListLinePlot]]"
 
 
 PlotHT::usage = 
@@ -53,42 +49,26 @@ Begin["`Private`"]
 (*Implementation*)
 
 
-PlotDepthSection[horNHsorted_,opts:OptionsPattern[ListLinePlot]] := 
-ListLinePlot[horNHsorted,
-				opts,
-				FrameStyle -> Directive[14, Black], 
-				Filling -> Bottom, Frame -> True, ImageSize -> 500,
-				PlotLabels -> Map["Hor " <> ToString[#] &, (Range[Length[horNHsorted]] - 1)],
-				PlotLabel -> "Depth Section", 
-				LabelStyle -> Directive[14, Gray]
-]
+PlotDepthSection[horNH_, opts:OptionsPattern[ListLinePlot]] := 
+ListLinePlot[horNH, opts]
 
 
-PlotDepthSection[horNHsorted_,datasetWells_, opts:OptionsPattern[ListLinePlot]] := 
-ListLinePlot[horNHsorted,
-				opts,
-				GridLines->{DeleteDuplicates[Normal[datasetWells[All, "x"]]], None},
-				GridLinesStyle -> Directive[Thick, Gray],
-				FrameStyle -> Directive[14, Black], 
-				Filling -> Bottom, Frame -> True, ImageSize -> 500,
-				PlotLabels -> Map["Hor " <> ToString[#] &, (Range[Length[horNHsorted]] - 1)],
-				PlotLabel -> "Depth Section with wells", 
-				LabelStyle -> Directive[14, Gray]
-]
+PlotDepthSection[horNH_, datasetWells_, opts:OptionsPattern[ListLinePlot]] := 
+ListLinePlot[horNH, opts]
 
 
-PlotVelocity[velModel_, horNHsorted_,opts:OptionsPattern[{ListLinePlot,ListContourPlot}]] :=
+PlotVelocity[velModel_, horNH_, opts:OptionsPattern[{ListLinePlot, ListContourPlot}]] :=
 Show[ListContourPlot[Flatten[velModel, 2][[All, 2 ;; 4]], 
-						FilterRules[opts,Options[ListContourPlot]],
+						FilterRules[opts, Options[ListContourPlot]],
 						ColorFunction -> ColorData[{"RedBlueTones", "Reverse"}],
 						PlotLegends -> BarLegend[Automatic, LegendLabel -> "Vel, m/s"],
 						PlotLabel -> "Velocity Distribution"
 									],
-			ListLinePlot[horNHsorted, 
+			ListLinePlot[horNH, 
 							FilterRules[opts,Options[ListLinePlot]],
 							PlotStyle -> {Directive[Thickness[0.005], Black]},
 							PlotLabel->"Velocity Distribution",
-							PlotLabels -> Map["Hor " <> ToString[#] &, (Range[Length[horNHsorted]] - 1)],
+							PlotLabels -> Map["Hor " <> ToString[#] &, (Range[Length[horNH]] - 1)],
 							LabelStyle -> Directive[14, Gray],  
 							ImageSize -> 500
 									], 
@@ -98,32 +78,14 @@ Show[ListContourPlot[Flatten[velModel, 2][[All, 2 ;; 4]],
 ] 
 
 
-PlotTimeSection[timeNH_] :=
+PlotTimeSection[timeNH_, opts:OptionsPattern[ListLinePlot]] :=
 Module[{
 				timeNHreverseT, (*dont know how to reverse positive axis t on the plot, so there is such a solation*)
 				i,
 				j
 },
 				timeNHreverseT = Table[{timeNH[[i, j, 1]], -timeNH[[i, j, 2]]}, {i, Length[timeNH]}, {j, Length[timeNH[[i]]]}];
-				ListLinePlot[timeNHreverseT,
-								FrameStyle -> Directive[14, Black], 
-								Filling -> Bottom, Frame -> True, ImageSize -> 500,
-								PlotLabels -> Map["t " <> ToString[#] &, (Range[Length[timeNH]] - 1)],
-								PlotLabel -> "Time Section", 
-								LabelStyle -> Directive[14, Gray]
-							]
-]
-
-
-PlotDepthSectionWithWells[horNHsorted_, datasetWells_] := 
-ListLinePlot[horNHsorted,
-				GridLines->{DeleteDuplicates[Normal[datasetWells[All, "x"]]], None},
-				GridLinesStyle -> Directive[Thick, Gray],
-				FrameStyle -> Directive[14, Black], 
-				Filling -> Bottom, Frame -> True, ImageSize -> 500,
-				PlotLabels -> Map["Hor " <> ToString[#] &, (Range[Length[horNHsorted]] - 1)],
-				PlotLabel -> "Depth Section with wells", 
-				LabelStyle -> Directive[14, Gray]
+				ListLinePlot[timeNHreverseT, opts]
 ]
 
 
@@ -137,15 +99,15 @@ Module[{
 				tmin = Table[Min[dataWellsHT[[i]][[All, 1]]], {i, Length[dataWellsHT]}];
 				tmax = Table[Max[dataWellsHT[[i]][[All, 1]]], {i, Length[dataWellsHT]}];
 				plots = Table[Show[ListPlot[dataWellsHT[[i]], ImageSize -> 500,
-												PlotLabel -> StringJoin["Horizon ",ToString[i - 1],". h = f(t)"],
+												PlotLabel -> StringJoin["Horizon ",ToString[i],". h = f(t)"],
 												LabelStyle -> Directive[14, Gray],
-												GridLines -> {dataWellsHT[[i]][[All, 1]],dataWellsHT[[i]][[All, 2]]}
+												GridLines -> {dataWellsHT[[i]][[All, 1]], dataWellsHT[[i]][[All, 2]]}
 									],
 									Plot[lmSet[[i]][t], {t, tmin[[i]], tmax[[i]]}], 
 									
 									Frame -> True,
 									FrameStyle -> Directive[14, Black],
-									FrameLabel -> {"t, s", "h, m"}], {i, 2, Length[dataWellsHT]}
+									FrameLabel -> {"t, s", "h, m"}], {i, Length[dataWellsHT]}
 							];
 
 				Return[plots]
@@ -171,7 +133,7 @@ Module[{
 									
 									Frame -> True,
 									FrameStyle -> Directive[14, Black],
-									FrameLabel -> {"t, s", "v, m"}], {i, 2, Length[setVT]}
+									FrameLabel -> {"t, s", "v, m"}], {i, Length[setVT]}
 							];
 
 				Return[plots]
