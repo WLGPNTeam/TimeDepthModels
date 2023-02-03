@@ -15,7 +15,7 @@ BeginPackage["WLGPNTeam`TimeDepthModels`"]
 (*Names*)
 
 
-ClearAll[PlotDepthSection, PlotVelocity, PlotTimeSection, PlotHT, PlotVT]
+ClearAll[PlotDepthSection, PlotVelocity, PlotTimeSection, PlotHT, PlotVT, PlotTH]
 
 
 PlotDepthSection::usage = 
@@ -36,6 +36,10 @@ PlotHT::usage =
 
 PlotVT::usage = 
 "PlotVT[setVT, lmSet, t]"
+
+
+PlotTH::usage = 
+"PlotTH[dataWellsTH, lmSet, h]"
 
 
 (* ::Section:: *)
@@ -137,6 +141,32 @@ Module[{
 							];
 
 				Return[plots]
+]
+
+
+PlotTH[dataWellsTH_, lmSet_, h_]:= 
+Module[{
+				plots,
+				hmin,
+				hmax,
+				i
+},
+				hmin = Table[Min[dataWellsTH[[i]][[All, 1]]], {i, Length[dataWellsTH]}];
+				hmax = Table[Max[dataWellsTH[[i]][[All, 1]]], {i, Length[dataWellsTH]}];
+				plots = Table[Show[ListPlot[dataWellsTH[[i]], ImageSize -> 500,
+												PlotLabel -> StringJoin["Horizon ",ToString[i],". t = f(h)"],
+												LabelStyle -> Directive[14, Gray],
+												GridLines -> {dataWellsTH[[i]][[All, 2]], dataWellsTH[[i]][[All, 1]]}
+									],
+									Plot[lmSet[[i]][h], {h, hmin[[i]], hmax[[i]]}], 
+									
+									Frame -> True,
+									FrameStyle -> Directive[14, Black],
+									FrameLabel -> {"h, m", "t, s"}], {i, Length[dataWellsTH]}
+							];
+
+				Return[plots]
+	
 ]
 
 
