@@ -15,27 +15,31 @@ BeginPackage["WLGPNTeam`TimeDepthModels`"]
 (*Names*)
 
 
-ClearAll[PlotDepthSection, PlotVelocity, PlotTimeSection, PlotHT, PlotVT]
+ClearAll[PlotDepthSection, PlotVelocity, PlotTimeSection, PlotHT, PlotVT, PlotTH]
 
 
 PlotDepthSection::usage = 
-"PlotDepthSection[horNH, opts:OptionsPattern[ListLinePlot]]"
+"PlotDepthSection[horizons, opts:OptionsPattern[ListLinePlot]]"
 
 
 PlotVelocity::usage = 
-"PlotVelocity[velModel, horNH, opts:OptionsPattern[{ListLinePlot, ListContourPlot}]]"
+"PlotVelocity[model, horizons, opts:OptionsPattern[{ListLinePlot, ListContourPlot}]]"
 
 
 PlotTimeSection::usage = 
-"PlotTimeSection[timeNH, opts:OptionsPattern[ListLinePlot]]"
+"PlotTimeSection[time, opts:OptionsPattern[ListLinePlot]]"
 
 
 PlotHT::usage = 
-"PlotHT[dataWellsHT, lmSet, t]"
+"PlotHT[wellValues, lmSet, t]"
 
 
 PlotVT::usage = 
-"PlotVT[setVT, lmSet, t]"
+"PlotVT[wellValues, lmSet, t]"
+
+
+PlotTH::usage = 
+"PlotTH[wellValues, lmSet, h]"
 
 
 (* ::Section:: *)
@@ -49,26 +53,26 @@ Begin["`Private`"]
 (*Implementation*)
 
 
-PlotDepthSection[horNH_, opts:OptionsPattern[ListLinePlot]] := 
-ListLinePlot[horNH, opts]
+PlotDepthSection[horizons_, opts:OptionsPattern[ListLinePlot]] := 
+ListLinePlot[horizons, opts]
 
 
-PlotDepthSection[horNH_, datasetWells_, opts:OptionsPattern[ListLinePlot]] := 
-ListLinePlot[horNH, opts]
+PlotDepthSection[horizons_, datasetWells_, opts:OptionsPattern[ListLinePlot]] := 
+ListLinePlot[horizons, opts]
 
 
-PlotVelocity[velModel_, horNH_, opts:OptionsPattern[{ListLinePlot, ListContourPlot}]] :=
-Show[ListContourPlot[Flatten[velModel, 2][[All, 2 ;; 4]], 
+PlotVelocity[model_, horizons_, opts:OptionsPattern[{ListLinePlot, ListContourPlot}]] :=
+Show[ListContourPlot[Flatten[model, 2][[All, 2 ;; 4]], 
 						FilterRules[opts, Options[ListContourPlot]],
 						ColorFunction -> ColorData[{"RedBlueTones", "Reverse"}],
 						PlotLegends -> BarLegend[Automatic, LegendLabel -> "Vel, m/s"],
 						PlotLabel -> "Velocity Distribution"
 									],
-			ListLinePlot[horNH, 
-							FilterRules[opts,Options[ListLinePlot]],
+			ListLinePlot[horizons, 
+							FilterRules[opts, Options[ListLinePlot]],
 							PlotStyle -> {Directive[Thickness[0.005], Black]},
 							PlotLabel->"Velocity Distribution",
-							PlotLabels -> Map["Hor " <> ToString[#] &, (Range[Length[horNH]] - 1)],
+							PlotLabels -> Map["Hor " <> ToString[#] &, (Range[Length[horizons]] - 1)],
 							LabelStyle -> Directive[14, Gray],  
 							ImageSize -> 500
 									], 
@@ -78,36 +82,36 @@ Show[ListContourPlot[Flatten[velModel, 2][[All, 2 ;; 4]],
 ] 
 
 
-PlotTimeSection[timeNH_, opts:OptionsPattern[ListLinePlot]] :=
+PlotTimeSection[time_, opts:OptionsPattern[ListLinePlot]] :=
 Module[{
-				timeNHreverseT, (*dont know how to reverse positive axis t on the plot, so there is such a solation*)
+				timeReverseT, (*dont know how to reverse positive axis t on the plot, so there is such a solation*)
 				i,
 				j
 },
-				timeNHreverseT = Table[{timeNH[[i, j, 1]], -timeNH[[i, j, 2]]}, {i, Length[timeNH]}, {j, Length[timeNH[[i]]]}];
-				ListLinePlot[timeNHreverseT, opts]
+				timeReverseT = Table[{time[[i, j, 1]], -time[[i, j, 2]]}, {i, Length[time]}, {j, Length[time[[i]]]}];
+				ListLinePlot[timeReverseT, opts]
 ]
 
 
-PlotHT[dataWellsHT_, lmSet_, t_]:= 
+PlotHT[wellValues_, lmSet_, t_]:= 
 Module[{
 				plots,
 				tmin,
 				tmax,
 				i
 },
-				tmin = Table[Min[dataWellsHT[[i]][[All, 1]]], {i, Length[dataWellsHT]}];
-				tmax = Table[Max[dataWellsHT[[i]][[All, 1]]], {i, Length[dataWellsHT]}];
-				plots = Table[Show[ListPlot[dataWellsHT[[i]], ImageSize -> 500,
+				tmin = Table[Min[wellValues[[i]][[All, 1]]], {i, Length[wellValues]}];
+				tmax = Table[Max[wellValues[[i]][[All, 1]]], {i, Length[wellValues]}];
+				plots = Table[Show[ListPlot[wellValues[[i]], ImageSize -> 500,
 												PlotLabel -> StringJoin["Horizon ",ToString[i],". h = f(t)"],
 												LabelStyle -> Directive[14, Gray],
-												GridLines -> {dataWellsHT[[i]][[All, 1]], dataWellsHT[[i]][[All, 2]]}
+												GridLines -> {wellValues[[i]][[All, 1]], wellValues[[i]][[All, 2]]}
 									],
 									Plot[lmSet[[i]][t], {t, tmin[[i]], tmax[[i]]}], 
 									
 									Frame -> True,
 									FrameStyle -> Directive[14, Black],
-									FrameLabel -> {"t, s", "h, m"}], {i, Length[dataWellsHT]}
+									FrameLabel -> {"t, s", "h, m"}], {i, Length[wellValues]}
 							];
 
 				Return[plots]
@@ -115,28 +119,54 @@ Module[{
 ]
 
 
-PlotVT[setVT_, lmSet_, t_]:= 
+PlotVT[wellValues_, lmSet_, t_]:= 
 Module[{
 				plots,
 				tmin,
 				tmax,
 				i
 },
-				tmin = Table[Min[setVT[[i]][[All,2]]], {i, Length[setVT]}];
-				tmax = Table[Max[setVT[[i]][[All,2]]], {i, Length[setVT]}];
-				plots = Table[Show[ListPlot[setVT[[i]][[All, 2;;3]], ImageSize -> 500,
+				tmin = Table[Min[wellValues[[i]][[All,2]]], {i, Length[wellValues]}];
+				tmax = Table[Max[wellValues[[i]][[All,2]]], {i, Length[wellValues]}];
+				plots = Table[Show[ListPlot[wellValues[[i]][[All, 2;;3]], ImageSize -> 500,
 												PlotLabel -> StringJoin["Horizon ",ToString[i - 1],". v = f(t)"],
 												LabelStyle -> Directive[14, Gray],
-												GridLines -> {setVT[[i]][[All,2]], setVT[[i]][[All, 3]]}
+												GridLines -> {wellValues[[i]][[All,2]], wellValues[[i]][[All, 3]]}
 									],
 									Plot[lmSet[[i]][t], {t, tmin[[i]], tmax[[i]]}], 
 									
 									Frame -> True,
 									FrameStyle -> Directive[14, Black],
-									FrameLabel -> {"t, s", "v, m"}], {i, Length[setVT]}
+									FrameLabel -> {"t, s", "v, m"}], {i, Length[wellValues]}
 							];
 
 				Return[plots]
+]
+
+
+PlotTH[wellValues_, lmSet_, h_]:= 
+Module[{
+				plots,
+				hmin,
+				hmax,
+				i
+},
+				hmin = Table[Min[wellValues[[i]][[All, 1]]], {i, Length[wellValues]}];
+				hmax = Table[Max[wellValues[[i]][[All, 1]]], {i, Length[wellValues]}];
+				plots = Table[Show[ListPlot[wellValues[[i]], ImageSize -> 500,
+												PlotLabel -> StringJoin["Horizon ", ToString[i],". t = f(h)"],
+												LabelStyle -> Directive[14, Gray],
+												GridLines -> {wellValues[[i]][[All, 2]], wellValues[[i]][[All, 1]]}
+									],
+									Plot[lmSet[[i]][h], {h, hmin[[i]], hmax[[i]]}], 
+									
+									Frame -> True,
+									FrameStyle -> Directive[14, Black],
+									FrameLabel -> {"h, m", "t, s"}], {i, Length[wellValues]}
+							];
+
+				Return[plots]
+	
 ]
 
 
