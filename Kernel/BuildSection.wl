@@ -256,9 +256,6 @@ Module[{
 ]
 
 
-Map
-
-
 HTMethod[wellDataset_, time_, t_]:= 
 Module[{
                 
@@ -283,16 +280,16 @@ Module[{
                 surface = Values[Normal[wellDataset[Select[#horizon == 1&]][[All, {2, 4}]]]];
                 
                 wellValues = Table[Values[Normal[wellDataset[Select[#horizon == i&]][[All, {5, 4}]]]], {i, 2, Max[wellDataset[All, 3]]}];
-                wellValues[[All, All, 1]] *= 2;           
+                wellValues[[All, All, 1]] /= 2;           
                 lmSet = Table[LinearModelFit[wellValues[[i]], t, t], {i,  Length[wellValues]}];	
                 lmParametres = Table[lmSet[[i]]["BestFitParameters"], {i, Length[lmSet]}];
-                fits = Table[Table[{(j - 1) dx, (2 * lmParametres[[i, 2]] * time[[i + 1, j, 2]] + lmParametres[[i, 1]])}, {j, len/dx + 1}], {i, Length[lmParametres]}];
+                fits = Table[Table[{(j - 1) dx, (lmParametres[[i, 2]] * time[[i + 1, j, 2]] / 2 + lmParametres[[i, 1]])}, {j, len/dx + 1}], {i, Length[lmParametres]}];
 								
 				(*find errors*)
 				positions = DeleteDuplicates[Normal[wellDataset[All, "x"]]];
 				depthObjective = wellValues[[All, All, 2]];
 				depthPredicteded = Table[Flatten[Cases[fits[[i]], {#,__}]&/@positions, 1], {i, 1, Length[fits]}][[All, All, 2]];
-				errors = Table[Table[{positions[[j]], (depthObjective - depthPredicteded)[[i, j]]},{j, 1, Length[positions]}],{i, Length[depthObjective]}];
+				errors = Table[Table[{positions[[j]], (depthObjective - depthPredicteded)[[i, j]]}, {j, 1, Length[positions]}],{i, Length[depthObjective]}];
 				interpolationErrors = Table[Table[{(j - 1)dx, Interpolation[errors[[i]], (j - 1)dx, Method -> "Spline"]}, {j, len/dx + 1}], {i, Length[errors]}];
 				
 				result = Join[{surface}, Table[Table[{fits[[i, j, 1]], (fits[[i, j, 2]] + interpolationErrors[[i, j, 2]])}, {j, len/dx + 1}], {i, Length[lmParametres]}]];
@@ -321,16 +318,16 @@ Module[{
                 positions,
                 errors,
                 interpolationErrors,
-                depthPredicteded,
+                depthPredicted,
                 result
                 
 },               
-	            dx = time[[1, 2, 1]];
-	            len = time[[1, -1, 1]];
-	            surface = Values[Normal[wellDataset[Select[#horizon == 1&]][[All, {2, 4}]]]];
+	            dx = time[[1, 2, 1]]; (*section step*)
+	            len = time[[1, -1, 1]]; (*length of section*)
+	            surface = Values[Normal[wellDataset[Select[#horizon == 1&]][[All, {2, 4}]]]]; (*surface values (well, depth)*)
 	            
-	            wellValues = Table[Values[Normal[wellDataset[Select[#horizon == i&]][[All, {2, 5, 4}]]]], {i, 2, Max[wellDataset[All, 3]]}];
-	            wellValues[[All, All, 2]] *= 2;
+	            wellValues = Table[Values[Normal[wellDataset[Select[#horizon == i&]][[All, {2, 5, 4}]]]], {i, 2, Max[wellDataset[All, 3]]}]; (*well, depth, time*)
+	            wellValues[[All, All, 2]] /= 2;
                 table = Table[Table[{i, wellValues[[i, j, 2]], 0}, {j, Length[wellValues[[i]]]}], {i, Length[wellValues]}];
                 For[i = 1, i <= Length[wellValues], i++,
                     For[j = 1, j <= Length[wellValues[[i]]], j++,
@@ -343,19 +340,19 @@ Module[{
  
 		        lmSet = Table[LinearModelFit[table[[i]][[All, 2;;3]], t, t], {i, 1, Length[table]}];
                 lmParametres = Table[lmSet[[i]]["BestFitParameters"], {i, Length[lmSet]}];
-                fits = Table[Table[{(j - 1) dx, -(4 * lmParametres[[i, 2]] * (time[[i + 1, j, 2]])^2 + 2 * lmParametres[[i, 1]] * time[[i + 1, j, 2]])}, {j, len/dx + 1}], {i, Length[lmParametres]}];
+                fits = Table[Table[{(j - 1) dx, -1/2*(lmParametres[[i, 2]] * time[[i + 1, j, 2]]^2  + lmParametres[[i, 1]] * time[[i + 1, j, 2]])}, {j, len/dx + 1}], {i, Length[lmParametres]}];
                 
 	
 				(*find errors*)
 				positions = DeleteDuplicates[Normal[wellDataset[All, "x"]]];
 				depthObjective = wellValues[[All, All, 3]];
-				depthPredicteded = Table[Flatten[Cases[fits[[i]], {#,__}]&/@positions, 1], {i, 1, Length[fits]}][[All, All, 2]];
-				errors = Table[Table[{positions[[j]], (depthObjective - depthPredicteded)[[i, j]]}, {j, 1, Length[positions]}],{i, 1, Length[depthObjective]}];
+				depthPredicted = Table[Flatten[Cases[fits[[i]], {#,__}]&/@positions, 1], {i, 1, Length[fits]}][[All, All, 2]];
+				errors = Table[Table[{positions[[j]], (depthObjective - depthPredicted)[[i, j]]}, {j, 1, Length[positions]}], {i, 1, Length[depthObjective]}];
 				interpolationErrors = Table[Table[{(j - 1)dx, Interpolation[errors[[i]], (j - 1)dx, Method -> "Spline"]}, {j, len/dx + 1}], {i, Length[errors]}];
 				
 				result = Join[{surface}, Table[Table[{fits[[i, j, 1]], (fits[[i, j, 2]] + interpolationErrors[[i, j, 2]])}, {j, len/dx + 1}], {i, Length[lmParametres]}]];
 				
-                Return[<|"wellValues" -> table, "lmSet" -> lmSet, "lmParametres" -> lmParametres, "result" -> result, "fits"->fits |>]
+                Return[<|"wellValues" -> table, "lmSet" -> lmSet, "lmParametres" -> lmParametres, "result" -> result, "fits" -> fits |>]
 ]
 
 
@@ -381,17 +378,17 @@ Module[{
 	            len = time[[1, -1, 1]]; (*length of section*)
                 
                 wellValues = Table[Values[Normal[wellDataset[Select[#horizon == i&]][[All, {4, 5}]]]], {i, 2, Max[wellDataset[All, 3]]}]; (*h, t*)
-                wellValues[[All, All, 2]] *= 2;              
+                wellValues[[All, All, 2]] /= 2;              
                 surface = Values[Normal[wellDataset[Select[#horizon == 1&]][[All, {2, 4}]]]];
                 lmSet = Table[LinearModelFit[wellValues[[i]], h, h], {i, Length[wellValues]}];	
                 lmParametres = Table[lmSet[[i]]["BestFitParameters"], {i, Length[lmSet]}];
-                fits = Table[Table[{(j - 1) dx, (2 * time[[i + 1, j, 2]]/lmParametres[[i, 2]] - lmParametres[[i, 1]]/lmParametres[[i, 2]])}, {j, len/dx + 1}], {i, Length[lmParametres]}];
+                fits = Table[Table[{(j - 1) dx, (time[[i + 1, j, 2]] / lmParametres[[i, 2]] / 2 - lmParametres[[i, 1]] / lmParametres[[i, 2]])}, {j, len/dx + 1}], {i, Length[lmParametres]}];
 								
 				(*find errors*)
 				positions = DeleteDuplicates[Normal[wellDataset[All, "x"]]];
 				depthObjective = wellValues[[All, All, 1]];
 				depthPredicteded = Table[Flatten[Cases[fits[[i]], {#,__}]&/@positions, 1], {i, Length[fits]}][[All, All, 2]];
-				errors = Table[Table[{positions[[j]], (depthObjective - depthPredicteded)[[i, j]]},{j, 1, Length[positions]}],{i,  Length[depthObjective]}];
+				errors = Table[Table[{positions[[j]], (depthObjective - depthPredicteded)[[i, j]]}, {j, 1, Length[positions]}],{i,  Length[depthObjective]}];
 				interpolationErrors = Table[Table[{(j - 1)dx, Interpolation[errors[[i]], (j - 1)dx, Method -> "Spline"]}, {j, len/dx + 1}], {i, Length[errors]}];
 				
 				result = Join[{surface}, Table[Table[{fits[[i, j, 1]], (fits[[i, j, 2]] + interpolationErrors[[i, j, 2]])}, {j, len/dx + 1}], {i, Length[lmParametres]}]];
@@ -422,11 +419,11 @@ Module[{
 	            len = time[[1, -1, 1]];
                 
                 wellValues = Table[Values[Normal[wellDataset[Select[#horizon == i&]][[All, {4, 5}]]]], {i, 2, Max[wellDataset[All, 3]]}]; (*pairs (depth, time)*)
-                wellValues[[All, All, 2]] *= 2;         
+                wellValues[[All, All, 2]] /= 2;         
                 surface = Values[Normal[wellDataset[Select[#horizon == 1&]][[All, {2, 4}]]]]; (*(x, depth) of first horizon*)
                 
                 vAveTable = Table[Mean[Table[-wellValues[[i, j, 1]]/wellValues[[i, j, 2]], {j, Length[wellValues[[i]]]}]], {i, Length[wellValues]}]; (*define average velocity for each horizon for each position on section; depth should be withminus always otherwise...*)
-                fits = Table[Table[{(j - 1) dx, -2 vAveTable[[i]] * time[[i + 1, j, 2]]}, {j, len/dx + 1}], {i, Length[vAveTable]}];
+                fits = Table[Table[{(j - 1) dx, -vAveTable[[i]] * time[[i + 1, j, 2]] / 2}, {j, len/dx + 1}], {i, Length[vAveTable]}];
 								
 				(*find errors*)
 				positions = DeleteDuplicates[Normal[wellDataset[All, "x"]]];
