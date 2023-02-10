@@ -19,7 +19,7 @@ ClearAll[BuildDepthSection, BuildVelocitySection, BuildTimeSection, BuildWellSet
 
 
 BuildDepthSection::usage = 
-"BuildDepthSection[listH, slope, len, dx, hDispersion, hTapering, type]"
+"BuildDepthSection[listH, slopes, len, dx, hDispersion, hTapering, type]"
 
 
 BuildVelocitySection::usage =
@@ -65,56 +65,68 @@ Begin["`Private`"]
 (*Implementation*)
 
 
-BuildDepthSection[listH_, slope_, len_, dx_, hDispersion_, hTapering_, type_] := 
+BuildDepthSection[listH_, slopes_, len_, dx_, hDispersion_, hTapering_, type_] := 
 Module[{
                 i,
+                j,
                 horizons,
                 radius,
                 parametres,
-                surface,    
                 data,
                 anomaly, 
                 anomalyFiltered,
                 listSumH,
-                flat,
-                inclined,
+                table,
                 totalH,
-                max
+                max,
+                sums
 },
 				If[hTapering >= 1/2 ((len/dx) - radius) listH[[1]]/totalH , Return["hTapering is too big"]]; 
  
 				radius = 5; (*GaussianFilter radius for layer with the highest dispersion*)
 				parametres = {0.1, 1}; (*parametres for ARProcess*)
-                surface = Table[0, len/dx + 1];  (*day surface as it is (without taking in account surface); len/dx = num of pickets*)  
-                anomaly = Table[0, len/dx + 1]; (*init anomaly*)
+                
                 totalH = Total[listH]; 
-                
+                                
                 (*flat layers made*)       
-                flat = Join[{surface}, Table[-Sum[listH[[i]], {i, 1, i}], {i, Length[listH]}, {j, len/dx + 1}]]; 
-                
-                (*add dipping if slope != 0*)
-                inclined = Table[(flat[[i]][[j]] - (len - (j - 1) dx) Tan[slope]), {i, Length[listH] + 1}, {j, len/dx + 1}]; 
-                
+                If[MatchQ[slopes, {} (*Or {0,0,0,...}*)], 
+                  table = Join[{Table[0, len/dx + 1]}, Table[-Sum[listH[[i]], {i, 1, i}], {i, Length[listH]}, {j, len/dx + 1}]],
+                   (*else*)        
+                  table = Table[Table[0, {j, len/dx + 1}], {i, Length[listH] + 1}]; (*add dipping if slope != 0*)
+                  sums = Table[Sum[listH[[i]], {i, 1, i}], {i, Length[listH]}];
+				  For[i = 1, i <= Length[listH] + 1 , i++, 
+					If[i == 1,
+						For[j = 1, j <= len/dx + 1, j++, table[[1, j]] = -N[Tan[slopes[[1]]]*(j - 1) * dx]],
+						For[j = 1, j <= len/dx + 1, j++, table[[i, j]] = -N[Tan[slopes[[i]]]*(j - 1) * dx] - sums[[i - 1]]];
+						If[Sign[slopes[[i]]] != Sign[slopes[[i - 1]]],														
+							max = Abs[Max[Table[table[[i, j]] - table[[i - 1, j]], {j, len/dx + 1}]]];
+							table[[i, All]] = Function[x, x - max*1.1]/@table[[i, All]],
+							max = Abs[Min[table[[i - 1]]]];
+							table[[i, All]] = Function[x, x - max*1.1]/@table[[i, All]]
+						]
+					] 
+                  ]
+                ];
                 (*make the highest anomaly*)
+                If[hDispersion != 0,
+                anomaly = Table[0, len/dx + 1]; (*init anomaly*);
                 data = RandomFunction[ARProcess[{parametres[[1]]}, parametres[[2]]], {1, len + 1}]; 
                 anomaly = hDispersion GaussianFilter[data["SliceData", Range[1, len + 1, dx]], radius][[1]];
                 
                 listSumH = Join[{1}, Table[Sum[listH[[i]], {i, 1, i}], {i, 1, Length[listH]}]]; (*needed for increasing Gaussian Filter radius in While below*)
-                
-                
+                                
                 i = 1;
-                While[i < Length[inclined] + 1, 
-                            inclined[[-type i]] += anomaly; (*"type" defines which (last or first) hor has the highest anomaly; add anomaly*)
-                            
-                               anomalyFiltered = hDispersion GaussianFilter[data["SliceData",Range[1, len + 1, dx]],(radius + hTapering totalH/listSumH[[-i]])][[1]];(*changing local anomaly for each horizon*)
+                While[i < Length[table] + 1, 
+                            table[[-type i]] += anomaly; (*"type" defines which (last or first) hor has the highest anomaly; add anomaly*)
+                               anomalyFiltered = GaussianFilter[table[[-type i]], (radius + hTapering totalH/listSumH[[-i]])];(*changing local anomaly for each horizon*) 
                                max = Abs[Max[Table[type*(anomaly[[j]] - anomalyFiltered[[j]]), {j, 1, Length[anomaly]}]]]; (*finding max difference between previous and current anomaly; need to know so that the inclined do not intersect*)
                                anomaly = Table[anomalyFiltered[[j]] + type * max, {j, 1, Length[anomalyFiltered]}]; (*evaluate anomaly for the next horizon*)
                                i++;
-                ];
+                ]
+    ];
+                horizons = Table[{(j - 1) dx, Round[table[[i, j]]]}, {i, Length[listH] + 1}, {j, len/dx + 1}]; (*make a list suitable for the Plot*)
     
-                horizons = Table[{(j - 1) dx, Round[inclined[[i]][[j]]]}, {i, Length[listH] + 1}, {j, len/dx + 1}]; (*make a list suitable for the Plot*)
-    
-                Return[<|"horizons" -> horizons|>]
+                Return[<|"horizons" -> horizons, "table"->table|>]
 ]
 
 
@@ -176,7 +188,7 @@ Module[{
                 For[i = 1, i <= Length[horizons], i++, 
                 For[j = 1, j <= Length[horizons[[i]]], j++,
                     If[i == 1, time[[i]][[j]] = {(j - 1) dx, 0}, (*first horizon is surface so time = 0*)
-                        dv = Table[Mean[Flatten[Part[model[[All]][[All, j]]][[All]][[k, All, 4]]]], {k, i}]; (*find average table in layers laying above i horizon *)
+                        dv = Table[Mean[Flatten[velModel[[All, j]][[k, All, 4]]]], {k, i}]; (*find average velocity in layers laying above i horizon *)
                         dh = Table[Abs[horizons[[k, j, 2]]],{k, i}]; (*find thicknesess of layers laying above i horizon*)
                         If[Length[dh] == Length[dv], dt = Abs[N[2 dh/dv]], Return["mistake"]]; (*make table of dt*)
                         time[[i]][[j]] = {(j - 1) dx, Total[dt]} (*for each horizon for each picket on section find time as sum of dt*)
