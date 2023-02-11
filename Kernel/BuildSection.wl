@@ -188,7 +188,7 @@ Module[{
                 For[i = 1, i <= Length[horizons], i++, 
                 For[j = 1, j <= Length[horizons[[i]]], j++,
                     If[i == 1, time[[i]][[j]] = {(j - 1) dx, 0}, (*first horizon is surface so time = 0*)
-                        dv = Table[Mean[Flatten[velModel[[All, j]][[k, All, 4]]]], {k, i}]; (*find average velocity in layers laying above i horizon *)
+                        dv = Table[Mean[Flatten[model[[All, j]][[k, All, 4]]]], {k, i}]; (*find average velocity in layers laying above i horizon *)
                         dh = Table[Abs[horizons[[k, j, 2]]],{k, i}]; (*find thicknesess of layers laying above i horizon*)
                         If[Length[dh] == Length[dv], dt = Abs[N[2 dh/dv]], Return["mistake"]]; (*make table of dt*)
                         time[[i]][[j]] = {(j - 1) dx, Total[dt]} (*for each horizon for each picket on section find time as sum of dt*)
