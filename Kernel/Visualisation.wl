@@ -129,7 +129,7 @@ Module[{
 				tmin = Table[Min[wellValues[[i]][[All,2]]], {i, Length[wellValues]}];
 				tmax = Table[Max[wellValues[[i]][[All,2]]], {i, Length[wellValues]}];
 				plots = Table[Show[ListPlot[wellValues[[i]][[All, 2;;3]], ImageSize -> 500,
-												PlotLabel -> StringJoin["Horizon ",ToString[i - 1],". v = f(t)"],
+												PlotLabel -> StringJoin["Horizon ",ToString[i],". v = f(t)"],
 												LabelStyle -> Directive[14, Gray],
 												GridLines -> {wellValues[[i]][[All,2]], wellValues[[i]][[All, 3]]}
 									],
@@ -156,7 +156,7 @@ Module[{
 				plots = Table[Show[ListPlot[wellValues[[i]], ImageSize -> 500,
 												PlotLabel -> StringJoin["Horizon ", ToString[i],". t = f(h)"],
 												LabelStyle -> Directive[14, Gray],
-												GridLines -> {wellValues[[i]][[All, 2]], wellValues[[i]][[All, 1]]}
+												GridLines -> {wellValues[[i]][[All, 1]], wellValues[[i]][[All, 2]]}
 									],
 									Plot[lmSet[[i]][h], {h, hmin[[i]], hmax[[i]]}], 
 									
