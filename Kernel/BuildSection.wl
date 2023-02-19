@@ -124,8 +124,9 @@ Module[{
                                i++;
                 ]
     ];
-                horizons = Table[{(j - 1) dx, Round[table[[i, j]]]}, {i, Length[listH] + 1}, {j, len/dx + 1}]; (*make a list suitable for the Plot*)
-    
+                max = Max[table[[1]]];
+                horizons = Join[{Table[{(j - 1) dx, 0}, {j, len/dx + 1}]}, Table[{(j - 1) dx, (Round[table[[i, j]]] - 1.1 * max)}, {i, Length[listH] + 1}, {j, len/dx + 1}]]; (*make a list suitable for the Plot*)
+     
                 Return[<|"horizons" -> horizons, "table"->table|>]
 ]
 

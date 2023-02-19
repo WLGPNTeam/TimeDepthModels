@@ -63,19 +63,9 @@ ListLinePlot[horizons, opts]
 
 PlotVelocity[model_, horizons_, opts:OptionsPattern[{ListLinePlot, ListContourPlot}]] :=
 Show[ListContourPlot[Flatten[model, 2][[All, 2 ;; 4]], 
-						FilterRules[opts, Options[ListContourPlot]](*,
-						ColorFunction -> ColorData[{"RedBlueTones", "Reverse"}],
-						PlotLegends -> BarLegend[Automatic, LegendLabel -> "Vel, m/s"],
-						PlotLabel -> "Velocity Distribution"*)
-									],
+						FilterRules[opts, Options[ListContourPlot]]],
 			ListLinePlot[horizons, 
-							FilterRules[opts, Options[ListLinePlot]](*,
-							PlotStyle -> {Directive[Thickness[0.005], Black]},
-							PlotLabel->"Velocity Distribution",
-							PlotLabels -> Map["Hor " <> ToString[#] &, (Range[Length[horizons]] - 1)],
-							LabelStyle -> Directive[14, Gray],  
-							ImageSize -> 500*)
-									], 
+							FilterRules[opts, Options[ListLinePlot]]], 
 			Frame -> True,
 			FrameStyle -> Directive[14, Black],
 			PlotRangePadding -> {{Scaled[0.05], Scaled[0.2]}, {Scaled[0.05], Scaled[0.05]}}
