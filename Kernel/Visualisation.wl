@@ -63,19 +63,9 @@ ListLinePlot[horizons, opts]
 
 PlotVelocity[model_, horizons_, opts:OptionsPattern[{ListLinePlot, ListContourPlot}]] :=
 Show[ListContourPlot[Flatten[model, 2][[All, 2 ;; 4]], 
-						FilterRules[opts, Options[ListContourPlot]](*,
-						ColorFunction -> ColorData[{"RedBlueTones", "Reverse"}],
-						PlotLegends -> BarLegend[Automatic, LegendLabel -> "Vel, m/s"],
-						PlotLabel -> "Velocity Distribution"*)
-									],
+						FilterRules[opts, Options[ListContourPlot]]],
 			ListLinePlot[horizons, 
-							FilterRules[opts, Options[ListLinePlot]](*,
-							PlotStyle -> {Directive[Thickness[0.005], Black]},
-							PlotLabel->"Velocity Distribution",
-							PlotLabels -> Map["Hor " <> ToString[#] &, (Range[Length[horizons]] - 1)],
-							LabelStyle -> Directive[14, Gray],  
-							ImageSize -> 500*)
-									], 
+							FilterRules[opts, Options[ListLinePlot]]], 
 			Frame -> True,
 			FrameStyle -> Directive[14, Black],
 			PlotRangePadding -> {{Scaled[0.05], Scaled[0.2]}, {Scaled[0.05], Scaled[0.05]}}
@@ -129,7 +119,7 @@ Module[{
 				tmin = Table[Min[wellValues[[i]][[All,2]]], {i, Length[wellValues]}];
 				tmax = Table[Max[wellValues[[i]][[All,2]]], {i, Length[wellValues]}];
 				plots = Table[Show[ListPlot[wellValues[[i]][[All, 2;;3]], ImageSize -> 500,
-												PlotLabel -> StringJoin["Horizon ",ToString[i - 1],". v = f(t)"],
+												PlotLabel -> StringJoin["Horizon ",ToString[i],". v = f(t)"],
 												LabelStyle -> Directive[14, Gray],
 												GridLines -> {wellValues[[i]][[All,2]], wellValues[[i]][[All, 3]]}
 									],
@@ -156,7 +146,7 @@ Module[{
 				plots = Table[Show[ListPlot[wellValues[[i]], ImageSize -> 500,
 												PlotLabel -> StringJoin["Horizon ", ToString[i],". t = f(h)"],
 												LabelStyle -> Directive[14, Gray],
-												GridLines -> {wellValues[[i]][[All, 2]], wellValues[[i]][[All, 1]]}
+												GridLines -> {wellValues[[i]][[All, 1]], wellValues[[i]][[All, 2]]}
 									],
 									Plot[lmSet[[i]][h], {h, hmin[[i]], hmax[[i]]}], 
 									
