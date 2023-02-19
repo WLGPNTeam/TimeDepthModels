@@ -208,7 +208,7 @@ Module[{
                 k,
                 dx,
                 len,
-                wells,
+                table,
                 positions,                           
                 dataset
 },
@@ -230,10 +230,10 @@ Module[{
                 ]
                 ];
                                
-                wells = Flatten[Table[Table[{k, dx (positions[[k]] - 1), i, N[Interpolation[horizons[[i]], dx *(positions[[k]] - 1)]], N[Interpolation[time[[i]], dx *(positions[[k]]-1)]]}, {i, Length[horizons]}],{k, Length[positions]}], 1]; (*table (wellNum, position on section, horizon, depth, time)*)
-				dataset = Dataset[Map[<|"well" -> #[[1]], "x" -> #[[2]], "horizon" -> #[[3]], "depth" -> #[[4]], "time" -> #[[5]]|>&, wells]]; (*make dataset of wells*)
+                table = Flatten[Table[Table[{k, dx (positions[[k]] - 1), i, N[Interpolation[horizons[[i]], dx *(positions[[k]] - 1)]], N[Interpolation[time[[i]], dx *(positions[[k]]-1)]]}, {i, Length[horizons]}],{k, Length[positions]}], 1]; (*table (wellNum, position on section, horizon, depth, time)*)
+				dataset = Dataset[Map[<|"well" -> #[[1]], "x" -> #[[2]], "horizon" -> #[[3]], "depth" -> #[[4]], "time" -> #[[5]]|>&, table]]; (*make dataset of wells*)
 				
-                Return[<|"wells" -> wells, "dataset" -> dataset, "positions" -> dx positions|>]
+                Return[<|"table" -> table, "dataset" -> dataset, "positions" -> dx positions|>]
 ]
 
 
