@@ -90,20 +90,26 @@ Module[{
                                 
                 (*flat layers made*)       
                 If[MatchQ[slopes, {} (*Or {0,0,0,...}*)], 
-                  table = Join[{Table[0, len/dx + 1]}, Table[-Sum[listH[[i]], {i, 1, i}], {i, Length[listH]}, {j, len/dx + 1}]],
+                  table = Join[{Table[0., len/dx + 1]}, Table[-Sum[listH[[i]], {i, 1, i}], {i, Length[listH]}, {j, len/dx + 1}]],
                    (*else*)        
                   table = Table[Table[0, {j, len/dx + 1}], {i, Length[listH] + 1}]; (*add dipping if slope != 0*)
                   sums = Table[Sum[listH[[i]], {i, 1, i}], {i, Length[listH]}];
 				  For[i = 1, i <= Length[listH] + 1 , i++, 
 					If[i == 1,
 						For[j = 1, j <= len/dx + 1, j++, table[[1, j]] = -N[Tan[slopes[[1]]]*(j - 1) * dx]],
-						For[j = 1, j <= len/dx + 1, j++, table[[i, j]] = -N[Tan[slopes[[i]]]*(j - 1) * dx] - sums[[i - 1]]];
-						If[Sign[slopes[[i]]] != Sign[slopes[[i - 1]]],														
+						For[j = 1, j <= len/dx + 1, j++, table[[i, j]] = -N[Tan[slopes[[i]]]*(j - 1) * dx]];
+						dh1 = Abs[Max[Table[table[[i, j]] - table[[i - 1, j]], {j, len/dx + 1}]]];
+						dh2 = sums[[i - 1]];
+						If[dh1 >= dh2, 
+						max = dh1, max = dh2						
+						];
+					table[[i, All]] = Function[x, x - max*1.1]/@table[[i, All]]
+						(*If[Sign[slopes[[i]]] != Sign[slopes[[i - 1]]],														
 							max = Abs[Max[Table[table[[i, j]] - table[[i - 1, j]], {j, len/dx + 1}]]];
 							table[[i, All]] = Function[x, x - max*1.1]/@table[[i, All]],
 							max = Abs[Min[table[[i - 1]]]];
 							table[[i, All]] = Function[x, x - max*1.1]/@table[[i, All]]
-						]
+						]*)
 					] 
                   ]
                 ];
@@ -124,9 +130,14 @@ Module[{
                                i++;
                 ]
     ];
+                If[MatchQ[table[[1]], Table[0., {j, len/dx + 1}]], 
+                horizons = Table[{(j - 1) dx, Round[table[[i, j]]]}, {i, Length[listH] + 1}, {j, len/dx + 1}],
                 max = Max[table[[1]]];
-                horizons = Join[{Table[{(j - 1) dx, 0}, {j, len/dx + 1}]}, Table[{(j - 1) dx, (Round[table[[i, j]]] - 1.1 * max)}, {i, Length[listH] + 1}, {j, len/dx + 1}]]; (*make a list suitable for the Plot*)
+                horizons = Join[{Table[{(j - 1) dx, 0}, {j, len/dx + 1}]}, Table[{(j - 1) dx, (Round[table[[i, j]]] - 1.1 * max)}, {i, Length[listH] + 1}, {j, len/dx + 1}]]                  
+                  ];(*make a list suitable for the Plot*)
      
+                (*here could be surface adding, now it is {0,0...0}*)
+                
                 Return[<|"horizons" -> horizons, "table"->table|>]
 ]
 
@@ -190,7 +201,7 @@ Module[{
                 For[j = 1, j <= Length[horizons[[i]]], j++,
                     If[i == 1, time[[i]][[j]] = {(j - 1) dx, 0}, (*first horizon is surface so time = 0*)
                         vave = Table[Mean[Flatten[model[[All, j]][[k, All, 4]]]], {k, 2, i}]; (*find average velocity in layers laying above i horizon *)
-                        dh = Table[Abs[horizons[[k, j, 2]] - horizons[[k - 1, j, 2]]], {k, 2, i}]; (*find thicknesess of layers laying above i horizon*)
+                        dh = Table[Abs[horizons[[k, j, 2]] - horizons[[k-1, j, 2]]], {k, 2, i}]; (*find thicknesess of layers laying above i horizon*)
                         If[Length[dh] == Length[vave], dt = Abs[N[2 dh/vave]], Return["mistake"]]; (*make table of dt*)
                         
                         time[[i]][[j]] = {(j - 1) dx, Total[dt]} (*for each horizon for each picket on section find time as sum of dt*)

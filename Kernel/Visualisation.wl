@@ -23,7 +23,7 @@ PlotDepthSection::usage =
 
 
 PlotVelocity::usage = 
-"PlotVelocity[model, horizons, opts:OptionsPattern[{ListLinePlot, ListContourPlot}]]"
+"PlotVelocity[model, horizons]"
 
 
 PlotTimeSection::usage = 
@@ -61,11 +61,16 @@ PlotDepthSection[horizons_, datasetWells_, opts:OptionsPattern[ListLinePlot]] :=
 ListLinePlot[horizons, opts]
 
 
-PlotVelocity[model_, horizons_, opts:OptionsPattern[{ListLinePlot, ListContourPlot}]] :=
+PlotVelocity[model_, horizons_] :=
 Show[ListContourPlot[Flatten[model, 2][[All, 2 ;; 4]], 
-						FilterRules[opts, Options[ListContourPlot]]],
+						ColorFunction -> ColorData[{"RedBlueTones", "Reverse"}],
+						PlotLegends -> BarLegend[Automatic, LegendLabel -> "v, m/s"],
+						PlotLabel -> "Velocity Distribution",
+						Contours -> {Automatic, 20}],
 			ListLinePlot[horizons, 
-							FilterRules[opts, Options[ListLinePlot]]], 
+							PlotStyle -> {Directive[Thickness[0.005], Black]},
+							PlotLabels -> Map["Hor " <> ToString[#] &, (Range[Length[horizons]] - 1)],
+							ImageSize -> 500], 
 			Frame -> True,
 			FrameStyle -> Directive[14, Black],
 			PlotRangePadding -> {{Scaled[0.05], Scaled[0.2]}, {Scaled[0.05], Scaled[0.05]}}
