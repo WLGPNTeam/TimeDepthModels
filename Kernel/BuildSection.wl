@@ -78,6 +78,8 @@ Module[{
                 listSumH,
                 table,
                 totalH,
+                dh1,
+                dh2,
                 max,
                 sums
 },
@@ -100,17 +102,9 @@ Module[{
 						For[j = 1, j <= len/dx + 1, j++, table[[i, j]] = -N[Tan[slopes[[i]]]*(j - 1) * dx]];
 						dh1 = Abs[Max[Table[table[[i, j]] - table[[i - 1, j]], {j, len/dx + 1}]]];
 						dh2 = sums[[i - 1]];
-						If[dh1 >= dh2, 
-						max = dh1, max = dh2						
-						];
-					table[[i, All]] = Function[x, x - max*1.1]/@table[[i, All]]
-						(*If[Sign[slopes[[i]]] != Sign[slopes[[i - 1]]],														
-							max = Abs[Max[Table[table[[i, j]] - table[[i - 1, j]], {j, len/dx + 1}]]];
-							table[[i, All]] = Function[x, x - max*1.1]/@table[[i, All]],
-							max = Abs[Min[table[[i - 1]]]];
-							table[[i, All]] = Function[x, x - max*1.1]/@table[[i, All]]
-						]*)
-					] 
+						If[dh1 >= dh2, max = dh1, max = dh2];
+					    table[[i, All]] = Function[x, x - max*1.1]/@table[[i, All]]
+                    ] 
                   ]
                 ];
                 (*make the highest anomaly*)
