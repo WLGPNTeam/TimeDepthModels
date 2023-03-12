@@ -450,7 +450,7 @@ Module[{
 				result = Table[Table[{fits[[i, j, 1]], (fits[[i, j, 2]] + interpolationErrors[[i, j, 2]])}, {j, len/dx + 1}], {i, Length[lmParametres]}]; (*add errors to fits*)
 				If[Length[surface] != 0, result = Join[{surface}, result]];
 				
-                Return[<|"wellValues" -> table, "lmSet" -> lmSet, "lmParametres" -> lmParametres, "result" -> result, "fits" -> fits |>]
+                Return[<|"depthObjective"->depthObjective, "depthPredicted"->depthPredicted, "wellValues" -> table, "lmSet" -> lmSet, "lmParametres" -> lmParametres, "fits"-> fits, "result" -> result, "fits" -> fits,  "errors" -> errors[[All,2]],  "RMSError"->Map[StandardDeviation[#[[All,2]]]&,errors] |>]
 ]
 
 
@@ -550,7 +550,7 @@ Module[{
 				result = Table[Table[{fits[[i, j, 1]], (fits[[i, j, 2]] + interpolationErrors[[i, j, 2]])}, {j, len/dx + 1}], {i, Length[lmParametres]}]; (*add errors to fits*)
 				If[Length[surface] != 0, result = Join[{surface}, result]];
 				
-                Return[<|"wellValues" -> wellValues, "result" -> result, "lmSet" -> lmSet, "lmParametres" -> lmParametres|>]
+                Return[<|"depthObjective"->depthObjective, "depthPredicted"->depthPredicted, "wellValues" -> wellValues, "fits"-> fits, "result" -> result, "lmSet" -> lmSet, "lmParametres" -> lmParametres, "errors" -> errors[[All,2]],  "RMSError"->Map[StandardDeviation[#[[All,2]]]&,errors]|>]
 ]
 
 
@@ -639,7 +639,7 @@ Module[{
 				result = Table[Table[{fits[[i, j, 1]], (fits[[i, j, 2]] + interpolationErrors[[i, j, 2]])}, {j, len/dx + 1}], {i, Length[fits]}]; (*add errors to fits*)
 				If[Length[surface] != 0, result = Join[{surface}, result]];
 				
-                Return[<|"result" -> result, "vAveTable" -> vAveTable, "fits" -> fits|>]
+                Return[<|"depthObjective"->depthObjective, "depthPredicted"->depthPredicted, "fits"-> fits, "result" -> result, "vAveTable" -> vAveTable, "fits" -> fits , "errors" -> errors[[All,2]],  "RMSError"->Map[StandardDeviation[#[[All,2]]]&,errors]|>]
 ]
 
 
