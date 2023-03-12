@@ -55,23 +55,23 @@ VaveMethod::usage =
 
 
 dHdTMethod::usage = 
-"dHdTMethod[setHT, wellDataset, time, dt]"
+"dHdTMethod[setHT, reference, wellDataset, time, dt]"
 
 
 dVdTMethod::usage = 
-"dVdTMethod[setVT, wellDataset, time, dt]"
+"dVdTMethod[setVT, reference, wellDataset, time, dt]"
 
 
 dTdHMethod::usage = 
-"dTdHMethod[setTH, wellDataset, time, dh]"
+"dTdHMethod[setTH, reference, wellDataset, time, dh]"
 
 
 dVaveMethod::usage = 
-"dVaveMethod[setVave, wellDataset, time]"
+"dVaveMethod[setVave, reference, wellDataset, time]"
 
 
 AllMethods::usage = 
-"AllMethods[set, wellDataset, time, dt, dh]"
+"AllMethods[set, horizons, wellDataset, time, dt, dh]"
 
 
 (* ::Section::Closed:: *)
@@ -348,21 +348,21 @@ Module[{
 ]
 
 
-dHdTMethod[setHT_, wellDataset_, time_, dt_]:= 
+dHdTMethod[setHT_, reference_, wellDataset_, time_, dt_]:= 
 Module[{
                 dx,
                 len,
                 wellValues,
                 lmSet ,
                 lmParametres,
-                referenceValuesInterpolated,
                 fits ,
                 positions,
                 depthObjective,
                 depthPredicted,
                 errors,
                 interpolationErrors,
-                result
+                result,
+                plotData
 },               
 		
             dx = time[[1, 2, 1]]; (*x step on section*)
@@ -373,13 +373,13 @@ Module[{
             wellValues[[All, All, 1]] /= 2; (*divide time*)
             wellValues[[All, All, 2]] *= -1; (*transform depths to positive values for easy calculations and presentable plots*)    
 
+            plotData = Table[wellValues[[i]]-wellValues[[1]], {i, 2, Length[wellValues]}];
+            
             lmSet = Table[LinearModelFit[wellValues[[i]] - wellValues[[1]](*!!!*), dt, dt], {i,  2, Length[wellValues] }]; (*evaluate linear models dh(dt) = adt + b for each horizon*) 
             lmParametres = Table[lmSet[[i]]["BestFitParameters"], {i, Length[lmSet]}]; (*linear model fits parameters*)
-            referenceValuesInterpolated = Table[{(j - 1)dx, Interpolation[ Table[{positions[[j]], wellValues[[1, j, 2]]}, {j, 1, Length[positions]}], (j - 1)dx, Method -> "Spline"]}, {j, len/dx + 1}]; (*!!!CHANGE IT!!!evaluate reference value*)
-	        fits = Table[Table[{(j - 1) dx, -referenceValuesInterpolated [[j, 2]] - (lmParametres[[i, 2]] * (time[[i + 1, j, 2]]  - time[[setHT[[1]], j, 2]])/ 2 + lmParametres[[i, 1]])}, {j, len/dx + 1}], {i, Length[lmParametres]}]; (*evaluate fits (x, h = href + dt/a - b/a). make data suitable for ListLinePlot*)
+            fits = Table[Table[{(j - 1) dx, reference[[j, 2]] - (lmParametres[[i, 2]] * (time[[setHT[[i + 1]], j, 2]]  - time[[setHT[[1]], j, 2]])/ 2 + lmParametres[[i, 1]])}, {j, len/dx + 1}], {i, Length[lmParametres]}]; (*evaluate fits (x, h = href + dt/a - b/a). make data suitable for ListLinePlot*)
 
-	
-            (*find errors between wells values and predicted by model*)
+	        (*find errors between wells values and predicted by model*)
             depthObjective = -wellValues[[2 ;; -1, All, 2]];
             depthPredicted = Table[Flatten[Cases[fits[[i]], {#,__}]&/@positions, 1], {i, 1, Length[fits]}][[All, All, 2]];
             errors = Table[Table[{positions[[j]], (depthObjective - depthPredicted)[[i, j]]}, {j, 1, Length[positions]}], {i, Length[depthObjective]}];
@@ -389,7 +389,7 @@ Module[{
             result = Table[Table[{fits[[i, j, 1]], (fits[[i, j, 2]] + interpolationErrors[[i, j, 2]])}, {j, len/dx + 1}], {i, Length[lmParametres]}]; (*add errors to fits*)
 				
 				
-            Return[<| "result" -> result, "lmSet" -> lmSet, "lmParametres" -> lmParametres, "fits" -> fits|>]
+            Return[<|"plotData" -> plotData, "result" -> result, "lmSet" -> lmSet, "lmParametres" -> lmParametres, "fits" -> fits|>]
 				
          
 ]
@@ -454,7 +454,7 @@ Module[{
 ]
 
 
-dVdTMethod[setVT_, wellDataset_, time_, dt_]:= 
+dVdTMethod[setVT_, reference_, wellDataset_, time_, dt_]:= 
 Module[{
                
                 i,
@@ -471,9 +471,8 @@ Module[{
                 errors,
                 interpolationErrors,
                 depthPredicted,
-                result,
-	            referenceValuesInterpolated 
-                
+                result
+	                           
 },               
 	            dx = time[[1, 2, 1]]; (*x step on section*)
 	            len = time[[1, -1, 1]]; (*length of section*)
@@ -494,8 +493,7 @@ Module[{
  
 		        lmSet = Table[LinearModelFit[table[[i]][[All, 2 ;; 3]], dt, dt], {i, Length[table]}]; (*evaluate linear models v(dt) for each horizon*)
                 lmParametres = Table[lmSet[[i]]["BestFitParameters"], {i, Length[lmSet]}]; (*linear model fits parameters*)
-                referenceValuesInterpolated = Table[{(j - 1)dx, Interpolation[Table[{positions[[j]], wellValues[[1, j, 3]]}, {j, 1, Length[positions]}], (j - 1)dx, Method -> "Spline"]}, {j, len/dx + 1}]; (*!!!CHANGE IT!!!evaluate reference value*)
-                fits = Table[Table[{(j - 1) dx, -referenceValuesInterpolated [[j, 2]]-1/2*(lmParametres[[i, 2]] * (time[[i + 1, j, 2]] - time[[setVT[[1]], j, 2]])^2/2  + lmParametres[[i, 1]] * (time[[i + 1, j, 2]] -time[[setVT[[1]], j, 2]]))}, {j, len/dx + 1}], {i, Length[lmParametres]}]; (*evaluate fits (x, h = href + adt^2 + bdt). make data suitable for ListLinePlot *)
+                fits = Table[Table[{(j - 1) dx, reference[[j, 2]] - 1/2*(lmParametres[[i, 2]] * (time[[setVT[[i + 1]], j, 2]] - time[[setVT[[1]], j, 2]])^2/2  + lmParametres[[i, 1]] * (time[[setVT[[i + 1]], j, 2]] - time[[setVT[[1]], j, 2]]))}, {j, len/dx + 1}], {i, Length[lmParametres]}]; (*evaluate fits (x, h = href + adt^2 + bdt). make data suitable for ListLinePlot *)
                  
 	
 				(*find errors between wells values and predicted by model*)
@@ -507,7 +505,7 @@ Module[{
 				result = Table[Table[{fits[[i, j, 1]], (fits[[i, j, 2]] + interpolationErrors[[i, j, 2]])}, {j, len/dx + 1}], {i, Length[lmParametres]}]; (*add errors to fits*)
 				
 				
-                Return[<|"lmSet" -> lmSet, "lmParametres" -> lmParametres, "result" -> result, "fits" -> fits |>]
+                Return[<|"plotData" -> table, "lmSet" -> lmSet, "lmParametres" -> lmParametres, "result" -> result, "fits" -> fits |>]
 ]
 
 
@@ -556,7 +554,7 @@ Module[{
 ]
 
 
-dTdHMethod[setTH_, wellDataset_, time_, dh_]:= 
+dTdHMethod[setTH_, reference_, wellDataset_, time_, dh_]:= 
 Module[{
                 i,
                 j,
@@ -571,8 +569,8 @@ Module[{
                 depthPredicted,
                 errors,
                 interpolationErrors,
-                result ,
-	            referenceValuesInterpolated               
+                result,
+                plotData             
 },               
 				dx = time[[1, 2, 1]]; (*x step on section*)
 	            len = time[[1, -1, 1]]; (*length of section*)
@@ -583,10 +581,11 @@ Module[{
                 
                 positions = DeleteDuplicates[Normal[wellDataset[All, "x"]]]; (*x positions of wells*)
                 
+                plotData = Table[wellValues[[i]]-wellValues[[1]], {i, 2, Length[wellValues]}];
+                
                 lmSet = Table[LinearModelFit[wellValues[[i]] - wellValues[[1]], dh, dh], {i, 2, Length[wellValues]}];	(*evaluate linear models dt(dh) = adh + b for each horizon*)
-                lmParametres = Table[lmSet[[i]]["BestFitParameters"], {i, Length[lmSet]}]; (*linear model fits parameters*)
-                referenceValuesInterpolated = Table[{(j - 1)dx,Interpolation[ Table[{positions[[j]], wellValues[[1, j, 1]]}, {j, 1, Length[positions]}], (j - 1)dx, Method -> "Spline"]}, {j, len/dx + 1}];   (*!!!CHANGE IT!!!evaluate reference value*)         
-                fits = Table[Table[{(j - 1) dx,  -referenceValuesInterpolated[[j, 2]] - ((time[[i + 1, j, 2]] - time[[setTH[[1]], j, 2]])/ lmParametres[[i, 2]] / 2 - lmParametres[[i, 1]] / lmParametres[[i, 2]])}, {j, len/dx + 1}], {i, Length[lmParametres]}]; (*evaluate fits (x, h = href + dt/a - b/a). make data suitable for ListLinePlot*)
+                lmParametres = Table[lmSet[[i]]["BestFitParameters"], {i, Length[lmSet]}]; (*linear model fits parameters*)                
+                fits = Table[Table[{(j - 1) dx,  reference[[j, 2]] - ((time[[setTH[[i + 1]], j, 2]] - time[[setTH[[1]], j, 2]])/ lmParametres[[i, 2]] / 2 - lmParametres[[i, 1]] / lmParametres[[i, 2]])}, {j, len/dx + 1}], {i, Length[lmParametres]}]; (*evaluate fits (x, h = href + dt/a - b/a). make data suitable for ListLinePlot*)
 								
 				(*find errors between wells values and predicted by model*)
 				depthObjective = -wellValues[[2 ;; -1, All, 1]];
@@ -596,11 +595,11 @@ Module[{
 				
 				result = Table[Table[{fits[[i, j, 1]], (fits[[i, j, 2]] + interpolationErrors[[i, j, 2]])}, {j, len/dx + 1}], {i, Length[lmParametres]}]; (*add errors to fits*)
 								
-                Return[<|"result" -> result, "lmSet" -> lmSet, "lmParametres" -> lmParametres, "fits" -> fits|>]
+                Return[<|"plotData" -> plotData, "result" -> result, "lmSet" -> lmSet, "lmParametres" -> lmParametres, "fits" -> fits|>]
 ]
 
 
-VaveMethod[wellDataset_, time_]:= 
+VaveMethod[wellDataset_,  time_]:= 
 Module[{
                 
                 i,
@@ -644,7 +643,7 @@ Module[{
 ]
 
 
-dVaveMethod[setVave_, wellDataset_, time_]:= 
+dVaveMethod[setVave_, reference_, wellDataset_, time_]:= 
 Module[{
                 
                 i,
@@ -672,9 +671,8 @@ Module[{
                 positions = DeleteDuplicates[Normal[wellDataset[All, "x"]]]; (*x positions of wells*)
                 
                 vAveTable = Table[Mean[Table[Abs[wellValues[[i, j, 1]] - wellValues[[1, j, 1]]]/(wellValues[[i, j, 2]] -  wellValues[[1, j, 2]]), {j, Length[wellValues[[i]]]}]], {i, 2 , Length[wellValues] }]; (*define average velocity for each horizon for each position on section. wellValues[[1]] - well values of reference horizon *)
-                                
-                referenceValuesInterpolated = Table[{(j - 1)dx, Interpolation[Table[{positions[[j]], wellValues[[1, j, 1]]}, {j, 1, Length[positions]}], (j - 1)dx, Method -> "Spline"]}, {j, len/dx + 1}]; (*!!!CHANGE IT!!!evaluate reference value*) 
-                fits = Table[Table[{(j - 1) dx, -referenceValuesInterpolated[[j, 2]] - vAveTable[[i]] * (time[[i + 1, j, 2]] - time[[setVave[[1]], j, 2]])/ 2}, {j, len/dx + 1}], {i, Length[vAveTable]}]; (*evaluate fits (x, h = href + vAve*dt/2). make data suitable for ListLinePlot*)
+                
+                fits = Table[Table[{(j - 1) dx, reference[[j, 2]] - vAveTable[[i]] * (time[[setVave[[i + 1]], j, 2]] - time[[setVave[[1]], j, 2]])/ 2}, {j, len/dx + 1}], {i, Length[vAveTable]}]; (*evaluate fits (x, h = href + vAve*dt/2). make data suitable for ListLinePlot*)
 								 
 				(*find errors between wells values and predicted by model*)
 				depthObjective = -wellValues[[2;;-1, All, 1]];
@@ -688,50 +686,37 @@ Module[{
 ]
 
 
-AllMethods[set_, wellDataset_, time_, dt_, dh_]:= 
+AllMethods[set_, horizons_, wellDataset_, time_, dt_, dh_]:= 
 Module[{
                 reference,
                 setHT,
                 setVT ,
                 setTH,
-                setVave,
-                lmSetHT,
-                lmParametresHT,
-                resultHT,
-                lmSetVT,
-                lmParametresVT,
-                resultVT,
-                lmSetTH ,
-                lmParametresTH ,
-                resultTH ,
-                resultVave,
-                vAveTable
-},               
-			
-                reference = set[[1]];
-                
-                setHT = Join[{reference}, Cases[set[[2 ;; -1]], {__, 1}][[All, 1]]]; (*make set of horizons (reference and predicted) for dHdT method*)
-                setVT = Join[{reference}, Cases[set[[2 ;; -1]], {__, 2}][[All, 1]]]; (*make set of horizons (reference and predicted) for dVdT method*)
-                setTH = Join[{reference}, Cases[set[[2 ;; -1]], {__, 3}][[All, 1]]]; (*make set of horizons (reference and predicted) for dTdH method*)
-                setVave = Join[{reference}, Cases[set[[2 ;; -1]], {__, 4}][[All, 1]]]; (*make set of horizons (reference and predicted) for dVave method*)
+                setVave
+                               
+},               	                              
+                reference = horizons[[set[[1]]]];
+                setHT = Join[{set[[1]]}, Cases[set[[2 ;; -1]], {__, 1}][[All, 1]]]; (*make set of horizons (reference and predicted) for dHdT method*)
+                setVT = Join[{set[[1]]}, Cases[set[[2 ;; -1]], {__, 2}][[All, 1]]]; (*make set of horizons (reference and predicted) for dVdT method*)
+                setTH = Join[{set[[1]]}, Cases[set[[2 ;; -1]], {__, 3}][[All, 1]]]; (*make set of horizons (reference and predicted) for dTdH method*)
+                setVave = Join[{set[[1]]}, Cases[set[[2 ;; -1]], {__, 4}][[All, 1]]]; (*make set of horizons (reference and predicted) for dVave method*)
                 
                 (*get results*)
-                lmSetHT = dHdTMethod[setHT, wellDataset, time, dt][["lmSet"]];
-                lmParametresHT = dHdTMethod[setHT, wellDataset, time, dt][["lmParametres"]];
-                resultHT = dHdTMethod[setHT, wellDataset, time, dt][["result"]];
-
-                lmSetVT = dVdTMethod[setVT, wellDataset, time, dt][["lmSet"]];
-                lmParametresVT = dVdTMethod[setVT, wellDataset, time, dt][["lmParametres"]];
-                resultVT= dVdTMethod[setVT, wellDataset, time, dt][["result"]];
-
-                lmSetTH = dTdHMethod[setTH, wellDataset, time, dh][["lmSet"]];
-                lmParametresTH =  dTdHMethod[setTH, wellDataset, time, dh][["lmParametres"]];
-                resultTH =  dTdHMethod[setTH, wellDataset, time, dh][["result"]];
-
-                resultVave = dVaveMethod[setVave, wellDataset, time][["result"]];
-                vAveTable = dVaveMethod[setVave, wellDataset, time][["vAveTable"]]; 
-
-                Return[<| "resultHT" -> resultHT, "resultVT" -> resultVT, "resultTH" -> resultTH, "lmSetHT" -> lmSetHT, "lmParametresHT" -> lmParametresHT, "lmSetVT" -> lmSetVT, "lmParametresVT" -> lmParametresVT, "lmSetTH" -> lmSetTH, "lmParametresTH" -> lmParametresTH, "resultVave" -> resultVave, "vAveTable" -> vAveTable|>]
+                
+                Return[<|"plotDataTH" -> dTdHMethod[setTH, reference, wellDataset, time, dh][["plotData"]], 
+                         "plotDataVT" -> dVdTMethod[setVT, reference, wellDataset, time, dt][["plotData"]],
+                         "plotDataHT" -> dHdTMethod[setHT, reference, wellDataset, time, dt][["plotData"]],
+                         "resultHT" -> dHdTMethod[setHT, reference, wellDataset, time, dt][["result"]], 
+                         "resultVT" -> dVdTMethod[setVT, reference, wellDataset, time, dt][["result"]],
+                         "resultTH" -> dTdHMethod[setTH, reference, wellDataset, time, dh][["result"]], 
+                         "lmSetHT" -> dHdTMethod[setHT, reference, wellDataset, time, dt][["lmSet"]],
+                         "lmParametresHT" -> dHdTMethod[setHT, reference, wellDataset, time, dt][["lmParametres"]],
+                         "lmSetVT" -> dVdTMethod[setVT, reference, wellDataset, time, dt][["lmSet"]],
+                         "lmParametresVT" -> dVdTMethod[setVT, reference, wellDataset, time, dt][["lmParametres"]],
+                         "lmSetTH" -> dTdHMethod[setTH, reference, wellDataset, time, dh][["lmSet"]],
+                         "lmParametresTH" -> dTdHMethod[setTH, reference, wellDataset, time, dh][["lmParametres"]],
+                         "resultVave" -> dVaveMethod[setVave, reference, wellDataset, time][["result"]],
+                         "vAveTable" -> dVaveMethod[setVave, reference, wellDataset, time][["vAveTable"]]|>]
 	 
 ]
 
