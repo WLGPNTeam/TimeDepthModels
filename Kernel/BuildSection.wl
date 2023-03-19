@@ -410,8 +410,7 @@ Module[{
             "lmParametres" -> lmParametres,
             "fits" -> fits,
             "errors" -> errors[[All, 2]],
-            "RMSError" -> Map[StandardDeviation[#[[All, 2]]]&, errors]|>]
-				
+            "RMSError" -> Map[StandardDeviation[#[[All, 2]]]&, errors]|>]			
          
 ]
 
@@ -522,7 +521,7 @@ Module[{
  
 		        lmSet = Table[LinearModelFit[table[[i]][[All, 2 ;; 3]], dt, dt], {i, Length[table]}]; (*evaluate linear models v(dt) for each horizon*)
                 lmParametres = Table[lmSet[[i]]["BestFitParameters"], {i, Length[lmSet]}]; (*linear model fits parameters*)
-                fits = Table[Table[{(j - 1) dx, reference[[j, 2]] - 1/2*(lmParametres[[i, 2]] * (time[[setVT[[i + 1]], j, 2]] - time[[setVT[[1]], j, 2]])^2/2  + lmParametres[[i, 1]] * (time[[setVT[[i + 1]], j, 2]] - time[[setVT[[1]], j, 2]]))}, {j, len/dx + 1}], {i, Length[lmParametres]}]; (*evaluate fits (x, h = href + adt^2 + bdt). make data suitable for ListLinePlot *)
+                fits = Table[Table[{(j - 1) dx, reference[[j, 2]] - 1/2 * (lmParametres[[i, 2]] * (time[[setVT[[i + 1]], j, 2]] - time[[setVT[[1]], j, 2]])^2/2  + lmParametres[[i, 1]] * (time[[setVT[[i + 1]], j, 2]] - time[[setVT[[1]], j, 2]]))}, {j, len/dx + 1}], {i, Length[lmParametres]}]; (*evaluate fits (x, h = href + adt^2 + bdt). make data suitable for ListLinePlot *)
                  
 	
 				(*find errors between wells values and predicted by model*)
@@ -581,7 +580,7 @@ Module[{
 				(*find errors between wells values and predicted by model*)
 				positions = DeleteDuplicates[Normal[wellDataset[All, "x"]]]; (*x positions of wells*)
 				depthObjective = -wellValues[[All, All, 1]];
-				depthPredicted = Table[Flatten[Cases[fits[[i]], {#,__}]&/@positions, 1], {i, Length[fits]}][[All, All, 2]];
+				depthPredicted = Table[Flatten[Cases[fits[[i]], {#, __}]&/@positions, 1], {i, Length[fits]}][[All, All, 2]];
 				errors = Table[Table[{positions[[j]], (depthObjective - depthPredicted)[[i, j]]}, {j, 1, Length[positions]}],{i,  Length[depthObjective]}];
 				interpolationErrors = Table[Table[{(j - 1)dx, Interpolation[errors[[i]], (j - 1)dx, Method -> "Spline"]}, {j, len/dx + 1}], {i, Length[errors]}]; (*interpolate errors*)
 				
@@ -681,13 +680,13 @@ Module[{
                 
                 surface = Values[Normal[wellDataset[Select[#horizon == 1&]][[All, {2, 4}]]]]; (*(x, depth) of first horizon*)
                 
-                vAveTable = Table[Mean[Table[-(-wellValues[[i, j, 1]] - surface[[j, 2]])/wellValues[[i, j, 2]], {j, Length[wellValues[[i]]]}]], {i, Length[wellValues]}]; (*define average velocity for each horizon for each position on section*)
+                vAveTable = Table[Mean[Table[(surface[[j, 2]] + wellValues[[i, j, 1]])/wellValues[[i, j, 2]], {j, Length[wellValues[[i]]]}]], {i, Length[wellValues]}]; (*define average velocity for each horizon for each position on section*)
                 fits = Table[Table[{(j - 1) dx, -vAveTable[[i]] * time[[i + 1, j, 2]] / 2}, {j, len/dx + 1}], {i, Length[vAveTable]}]; (*evaluate fits (x, h = vAve*t/2). make data suitable for ListLinePlot*)
 								
 				(*find errors between wells values and predicted by model*)
 				positions = DeleteDuplicates[Normal[wellDataset[All, "x"]]]; (*x positions of wells*)
 				depthObjective = -wellValues[[All, All, 1]];
-				depthPredicted = Table[Flatten[Cases[fits[[i]], {#,__}]&/@positions, 1], {i, 1, Length[fits]}][[All, All, 2]];
+				depthPredicted = Table[Flatten[Cases[fits[[i]], {#, __}]&/@positions, 1], {i, 1, Length[fits]}][[All, All, 2]];
 				errors = Table[Table[{positions[[j]], (depthObjective - depthPredicted)[[i, j]]}, {j, 1, Length[positions]}],{i, 1, Length[depthObjective]}];
 				interpolationErrors = Table[Table[{(j - 1)dx, Interpolation[errors[[i]], (j - 1)dx, Method -> "Spline"]}, {j, len/dx + 1}], {i, Length[errors]}]; (*interpolate errors*)
 				
