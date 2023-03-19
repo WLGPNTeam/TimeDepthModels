@@ -15,7 +15,7 @@ BeginPackage["WLGPNTeam`TimeDepthModels`"]
 (*Names*)
 
 
-ClearAll[PlotDepthSection, PlotVelocity, PlotTimeSection, PlotHT, PlotVT, PlotTH, PlotVaveVOGT]
+ClearAll[PlotDepthSection, PlotVelocity, PlotTimeSection, LinearRegressionPlots]
 
 
 PlotDepthSection::usage = 
@@ -30,20 +30,8 @@ PlotTimeSection::usage =
 "PlotTimeSection[time, opts:OptionsPattern[ListLinePlot]]"
 
 
-PlotHT::usage = 
-"PlotHT[wellValues, lmSet, t]"
-
-
-PlotVT::usage = 
-"PlotVT[wellValues, lmSet, t]"
-
-
-PlotTH::usage = 
-"PlotTH[wellValues, lmSet, h]"
-
-
-PlotVaveVOGT::usage =
-"PlotVaveVOGT[data, lmSet, v]"
+LinearRegressionPlots::usage =
+"LinearRegressionPlots[points, lmSet, variable, plotName, axesName]"
 
 
 (* ::Section:: *)
@@ -92,105 +80,32 @@ Module[{
 ]
 
 
-PlotHT[wellValues_, lmSet_, t_]:= 
+LinearRegressionPlots[points_, lmSet_, variable_, plotName_, axesName_]:= 
 Module[{
 				plots,
-				tmin,
-				tmax,
+				min,
+				max,
 				i
 },
-				tmin = Table[Min[wellValues[[i]][[All, 1]]], {i, Length[wellValues]}];
-				tmax = Table[Max[wellValues[[i]][[All, 1]]], {i, Length[wellValues]}];
-				plots = Table[Show[ListPlot[wellValues[[i]], ImageSize -> 500,
-												PlotLabel -> StringJoin["Horizon ",ToString[i],". h = f(t)"],
+				min = Table[Min[points[[i]][[All, 1]]], {i, Length[points]}];
+				max = Table[Max[points[[i]][[All, 1]]], {i, Length[points]}];
+				plots = Table[Show[ListPlot[points[[i]], ImageSize -> 500,
+												PlotLabel -> StringJoin["Horizon ", ToString[i],". ", plotName],
 												LabelStyle -> Directive[14, Gray],
-												GridLines -> {wellValues[[i]][[All, 1]], wellValues[[i]][[All, 2]]}
+												GridLines -> {points[[i]][[All, 1]], points[[i]][[All, 2]]}
 									],
-									Plot[lmSet[[i]][t], {t, tmin[[i]], tmax[[i]]}], 
+									Plot[lmSet[[i]][variable], {variable, min[[i]], max[[i]]}, PlotLegends -> NumberForm[Normal[lmSet[[i]]], 3], 
 									
 									Frame -> True,
 									FrameStyle -> Directive[14, Black],
-									FrameLabel -> {"t, s", "h, m"}], {i, Length[wellValues]}
+									FrameLabel -> axesName]], {i, Length[points]}									
 							];
-
-				Return[plots]
-	
-]
-
-
-PlotVT[wellValues_, lmSet_, t_]:= 
-Module[{
-				plots,
-				tmin,
-				tmax,
-				i
-},
-				tmin = Table[Min[wellValues[[i]][[All,2]]], {i, Length[wellValues]}];
-				tmax = Table[Max[wellValues[[i]][[All,2]]], {i, Length[wellValues]}];
-				plots = Table[Show[ListPlot[wellValues[[i]][[All, 2;;3]], ImageSize -> 500,
-												PlotLabel -> StringJoin["Horizon ",ToString[i],". v = f(t)"],
-												LabelStyle -> Directive[14, Gray],
-												GridLines -> {wellValues[[i]][[All,2]], wellValues[[i]][[All, 3]]}
-									],
-									Plot[lmSet[[i]][t], {t, tmin[[i]], tmax[[i]]}], 
-									
-									Frame -> True,
-									FrameStyle -> Directive[14, Black],
-									FrameLabel -> {"t, s", "v, m"}], {i, Length[wellValues]}
-							];
-
-				Return[plots]
-]
-
-
-PlotTH[wellValues_, lmSet_, h_]:= 
-Module[{
-				plots,
-				hmin,
-				hmax,
-				i
-},
-				hmin = Table[Min[wellValues[[i]][[All, 1]]], {i, Length[wellValues]}];
-				hmax = Table[Max[wellValues[[i]][[All, 1]]], {i, Length[wellValues]}];
-				plots = Table[Show[ListPlot[wellValues[[i]], ImageSize -> 500,
-												PlotLabel -> StringJoin["Horizon ", ToString[i],". t = f(h)"],
-												LabelStyle -> Directive[14, Gray],
-												GridLines -> {wellValues[[i]][[All, 1]], wellValues[[i]][[All, 2]]}
-									],
-									Plot[lmSet[[i]][h], {h, hmin[[i]], hmax[[i]]}], 
-									
-									Frame -> True,
-									FrameStyle -> Directive[14, Black],
-									FrameLabel -> {"h, m", "t, s"}], {i, Length[wellValues]}
-							];
-
-				Return[plots]
-	
-]
-
-
-PlotVaveVOGT[data_, lmSet_, v_]:= 
-Module[{
-				plots,
-				vmin,
-				vmax,
-				i
-},
-				vmin = Table[Min[data[[i]][[All, 1]]], {i, Length[data]}];
-				vmax = Table[Max[data[[i]][[All, 1]]], {i, Length[data]}];
-				Table[Show[ListPlot[data[[i]], ImageSize -> 500,
-												PlotLabel -> StringJoin["Horizon ", ToString[i],". vAve = f(vOGT)"],
-												LabelStyle -> Directive[14, Gray],
-												GridLines -> {data[[i]][[All, 1]], data[[i]][[All, 2]]}
-									],
-									Plot[lmSet[[i]][v], {v, vmin[[i]], vmax[[i]]}], 
-									
-									Frame -> True,
-									FrameStyle -> Directive[14, Black],
-									FrameLabel -> {"vAve, m/s", "vOGT, m/s"}], {i, Length[data]}
-							]
+							
+							Return[plots]
 
 ]
+
+
 
 
 (* ::Section:: *)
