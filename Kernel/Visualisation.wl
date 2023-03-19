@@ -15,7 +15,7 @@ BeginPackage["WLGPNTeam`TimeDepthModels`"]
 (*Names*)
 
 
-ClearAll[PlotDepthSection, PlotVelocity, PlotTimeSection, PlotHT, PlotVT, PlotTH]
+ClearAll[PlotDepthSection, PlotVelocity, PlotTimeSection, PlotHT, PlotVT, PlotTH, PlotVaveVOGT]
 
 
 PlotDepthSection::usage = 
@@ -40,6 +40,10 @@ PlotVT::usage =
 
 PlotTH::usage = 
 "PlotTH[wellValues, lmSet, h]"
+
+
+PlotVaveVOGT::usage =
+"PlotVaveVOGT[data, lmSet, v]"
 
 
 (* ::Section:: *)
@@ -162,6 +166,30 @@ Module[{
 
 				Return[plots]
 	
+]
+
+
+PlotVaveVOGT[data_, lmSet_, v_]:= 
+Module[{
+				plots,
+				vmin,
+				vmax,
+				i
+},
+				vmin = Table[Min[data[[i]][[All, 1]]], {i, Length[data]}];
+				vmax = Table[Max[data[[i]][[All, 1]]], {i, Length[data]}];
+				Table[Show[ListPlot[data[[i]], ImageSize -> 500,
+												PlotLabel -> StringJoin["Horizon ", ToString[i],". vAve = f(vOGT)"],
+												LabelStyle -> Directive[14, Gray],
+												GridLines -> {data[[i]][[All, 1]], data[[i]][[All, 2]]}
+									],
+									Plot[lmSet[[i]][v], {v, vmin[[i]], vmax[[i]]}], 
+									
+									Frame -> True,
+									FrameStyle -> Directive[14, Black],
+									FrameLabel -> {"vAve, m/s", "vOGT, m/s"}], {i, Length[data]}
+							]
+
 ]
 
 

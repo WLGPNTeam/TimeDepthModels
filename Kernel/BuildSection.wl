@@ -15,7 +15,7 @@ BeginPackage["WLGPNTeam`TimeDepthModels`"]
 (*Names*)
 
 
-ClearAll[BuildDepthSection, BuildVelocitySection, BuildTimeSection, BuildWellSet, CheckVelocity, HTMethod, VTMethod, THMethod, VaveMethod, dHdTMethod, dVdTMethod, dTdHMethod, dVaveMethod, AllMethods]
+ClearAll[BuildDepthSection, BuildVelocitySection, BuildTimeSection, BuildWellSet, CheckVelocity, HTMethod, VTMethod, THMethod, VaveMethod, dHdTMethod, dVdTMethod, dTdHMethod, dVaveMethod, AllMethods, VaveVOGTMethod]
 
 
 BuildDepthSection::usage = 
@@ -72,6 +72,10 @@ dVaveMethod::usage =
 
 AllMethods::usage = 
 "AllMethods[set, horizons, wellDataset, time, dt, dh]"
+
+
+VaveVOGTMethod::usage = 
+"VaveVOGTMethod[wellDataset, horizons, time, vOGT, v]"
 
 
 (* ::Section::Closed:: *)
@@ -215,7 +219,7 @@ Module[{
 				dt
 },
                 dx = horizons[[1, 2, 1]] - horizons[[1, 1, 1]]; (*section step*)
-                time = Table[{0, 0}, {i, 1, Length[horizons]}, {j, 1, Length[horizons[[1]]]}]; (*init time [num of inclined x num of pickets] *)
+                time = Table[{0, 0}, {i, 1, Length[horizons]}, {j, 1, Length[horizons[[1]]]}]; (*init time [num of horizons x num of pickets] *)
         
        
                 For[i = 1, i <= Length[horizons], i++, (*go into layer*)
@@ -344,7 +348,15 @@ Module[{
 					result = Table[Table[{fits[[i, j, 1]], (fits[[i, j, 2]] + interpolationErrors[[i, j, 2]])}, {j, len/dx + 1}], {i, Length[lmParametres]}]; (*add errors to fits*)
 					If[Length[surface] != 0, result = Join[{surface}, result]];
 				
-                Return[<|"wellValues" -> wellValues, "result" -> result, "lmSet" -> lmSet, "lmParametres" -> lmParametres|>]
+                Return[<|"depthObjective" -> depthObjective,
+                "depthPredicted" -> depthPredicted,
+                "wellValues" -> wellValues,
+                "result" -> result,
+                "lmSet" -> lmSet,
+                "lmParametres" -> lmParametres,
+                "fits" -> fits,
+                "errors" -> errors[[All, 2]],
+                "RMSError" -> Map[StandardDeviation[#[[All, 2]]]&, errors]|>]
 ]
 
 
@@ -373,7 +385,7 @@ Module[{
             wellValues[[All, All, 1]] /= 2; (*divide time*)
             wellValues[[All, All, 2]] *= -1; (*transform depths to positive values for easy calculations and presentable plots*)    
 
-            plotData = Table[wellValues[[i]]-wellValues[[1]], {i, 2, Length[wellValues]}];
+            plotData = Table[wellValues[[i]] - wellValues[[1]], {i, 2, Length[wellValues]}];
             
             lmSet = Table[LinearModelFit[wellValues[[i]] - wellValues[[1]](*!!!*), dt, dt], {i,  2, Length[wellValues] }]; (*evaluate linear models dh(dt) = adt + b for each horizon*) 
             lmParametres = Table[lmSet[[i]]["BestFitParameters"], {i, Length[lmSet]}]; (*linear model fits parameters*)
@@ -389,7 +401,16 @@ Module[{
             result = Table[Table[{fits[[i, j, 1]], (fits[[i, j, 2]] + interpolationErrors[[i, j, 2]])}, {j, len/dx + 1}], {i, Length[lmParametres]}]; (*add errors to fits*)
 				
 				
-            Return[<|"plotData" -> plotData, "result" -> result, "lmSet" -> lmSet, "lmParametres" -> lmParametres, "fits" -> fits|>]
+            Return[<|"depthObjective" -> depthObjective,
+            "depthPredicted" -> depthPredicted,
+            "wellValues" -> wellValues,
+            "plotData" -> plotData,
+            "result" -> result,
+            "lmSet" -> lmSet,
+            "lmParametres" -> lmParametres,
+            "fits" -> fits,
+            "errors" -> errors[[All, 2]],
+            "RMSError" -> Map[StandardDeviation[#[[All, 2]]]&, errors]|>]
 				
          
 ]
@@ -450,7 +471,15 @@ Module[{
 				result = Table[Table[{fits[[i, j, 1]], (fits[[i, j, 2]] + interpolationErrors[[i, j, 2]])}, {j, len/dx + 1}], {i, Length[lmParametres]}]; (*add errors to fits*)
 				If[Length[surface] != 0, result = Join[{surface}, result]];
 				
-                Return[<|"depthObjective"->depthObjective, "depthPredicted"->depthPredicted, "wellValues" -> table, "lmSet" -> lmSet, "lmParametres" -> lmParametres, "fits"-> fits, "result" -> result, "fits" -> fits,  "errors" -> errors[[All,2]],  "RMSError"->Map[StandardDeviation[#[[All,2]]]&,errors] |>]
+                Return[<|"depthObjective" -> depthObjective,
+                "depthPredicted" -> depthPredicted,
+                "wellValues" -> table,
+                "lmSet" -> lmSet,
+                "lmParametres" -> lmParametres,
+                "result" -> result,
+                "fits" -> fits, 
+                "errors" -> errors[[All, 2]],
+                "RMSError" -> Map[StandardDeviation[#[[All, 2]]]&, errors] |>]
 ]
 
 
@@ -505,7 +534,16 @@ Module[{
 				result = Table[Table[{fits[[i, j, 1]], (fits[[i, j, 2]] + interpolationErrors[[i, j, 2]])}, {j, len/dx + 1}], {i, Length[lmParametres]}]; (*add errors to fits*)
 				
 				
-                Return[<|"plotData" -> table, "lmSet" -> lmSet, "lmParametres" -> lmParametres, "result" -> result, "fits" -> fits |>]
+                Return[<|"depthObjective" -> depthObjective,
+                "depthPredicted" -> depthPredicted,
+                "wellValues" -> wellValues,                
+                "plotData" -> table,
+                "lmSet" -> lmSet,
+                "lmParametres" -> lmParametres,
+                "result" -> result,
+                "fits" -> fits,
+                "errors" -> errors[[All, 2]],
+                "RMSError" -> Map[StandardDeviation[#[[All, 2]]]&, errors] |>]
 ]
 
 
@@ -550,7 +588,15 @@ Module[{
 				result = Table[Table[{fits[[i, j, 1]], (fits[[i, j, 2]] + interpolationErrors[[i, j, 2]])}, {j, len/dx + 1}], {i, Length[lmParametres]}]; (*add errors to fits*)
 				If[Length[surface] != 0, result = Join[{surface}, result]];
 				
-                Return[<|"depthObjective"->depthObjective, "depthPredicted"->depthPredicted, "wellValues" -> wellValues, "fits"-> fits, "result" -> result, "lmSet" -> lmSet, "lmParametres" -> lmParametres, "errors" -> errors[[All,2]],  "RMSError"->Map[StandardDeviation[#[[All,2]]]&,errors]|>]
+                Return[<|"depthObjective" -> depthObjective,
+                "depthPredicted" -> depthPredicted,
+                "wellValues" -> wellValues,
+                "fits"-> fits,
+                "result" -> result,
+                "lmSet" -> lmSet,
+                "lmParametres" -> lmParametres,
+                "errors" -> errors[[All, 2]],
+                "RMSError"->Map[StandardDeviation[#[[All, 2]]]&, errors]|>]
 ]
 
 
@@ -581,7 +627,7 @@ Module[{
                 
                 positions = DeleteDuplicates[Normal[wellDataset[All, "x"]]]; (*x positions of wells*)
                 
-                plotData = Table[wellValues[[i]]-wellValues[[1]], {i, 2, Length[wellValues]}];
+                plotData = Table[wellValues[[i]] - wellValues[[1]], {i, 2, Length[wellValues]}];
                 
                 lmSet = Table[LinearModelFit[wellValues[[i]] - wellValues[[1]], dh, dh], {i, 2, Length[wellValues]}];	(*evaluate linear models dt(dh) = adh + b for each horizon*)
                 lmParametres = Table[lmSet[[i]]["BestFitParameters"], {i, Length[lmSet]}]; (*linear model fits parameters*)                
@@ -595,7 +641,16 @@ Module[{
 				
 				result = Table[Table[{fits[[i, j, 1]], (fits[[i, j, 2]] + interpolationErrors[[i, j, 2]])}, {j, len/dx + 1}], {i, Length[lmParametres]}]; (*add errors to fits*)
 								
-                Return[<|"plotData" -> plotData, "result" -> result, "lmSet" -> lmSet, "lmParametres" -> lmParametres, "fits" -> fits|>]
+                Return[<|"depthObjective" -> depthObjective,
+                "depthPredicted" -> depthPredicted,
+                "wellValues" -> wellValues,
+                "plotData" -> plotData,
+                "result" -> result,
+                "lmSet" -> lmSet,
+                "lmParametres" -> lmParametres,
+                "fits" -> fits,
+                "errors" -> errors[[All, 2]],
+                "RMSError" -> Map[StandardDeviation[#[[All, 2]]]&, errors]|>]
 ]
 
 
@@ -639,7 +694,14 @@ Module[{
 				result = Table[Table[{fits[[i, j, 1]], (fits[[i, j, 2]] + interpolationErrors[[i, j, 2]])}, {j, len/dx + 1}], {i, Length[fits]}]; (*add errors to fits*)
 				If[Length[surface] != 0, result = Join[{surface}, result]];
 				
-                Return[<|"depthObjective"->depthObjective, "depthPredicted"->depthPredicted, "fits"-> fits, "result" -> result, "vAveTable" -> vAveTable, "fits" -> fits , "errors" -> errors[[All,2]],  "RMSError"->Map[StandardDeviation[#[[All,2]]]&,errors]|>]
+                Return[<|"depthObjective" -> depthObjective,
+                "depthPredicted" -> depthPredicted,
+                "wellValues" -> wellValues,
+                "fits"-> fits,
+                "result" -> result,
+                "vAveTable" -> vAveTable,
+                "errors" -> errors[[All, 2]],
+                "RMSError" -> Map[StandardDeviation[#[[All, 2]]]&, errors]|>]
 ]
 
 
@@ -682,8 +744,131 @@ Module[{
 				
 				result = Table[Table[{fits[[i, j, 1]], (fits[[i, j, 2]] + interpolationErrors[[i, j, 2]])}, {j, len/dx + 1}], {i, Length[fits]}]; (*add errors to fits*)
 								
-                Return[<|"result" -> result, "vAveTable" -> vAveTable, "fits" -> fits|>]
+                Return[<|"depthObjective" -> depthObjective,
+                "depthPredicted" -> depthPredicted,
+                "fits" -> fits,
+                "result" -> result,
+                "vAveTable" -> vAveTable,
+                "errors" -> errors[[All, 2]],
+                "RMSError" -> Map[StandardDeviation[#[[All, 2]]]&, errors]|>]
 ]
+
+
+VaveVOGTMethod[wellDataset_, horizons_,  time_, vOGT_, v_]:= 
+Module[{                
+                i,
+                j,
+                dx,
+                len,
+                wellValues,
+                surface,
+                positions,                
+                errors,
+                interpolationErrors,
+                result,
+                vAveTable,
+				vAveTableFullHor,
+				table,
+				lmSet,
+				lmParametres,
+                fits,
+                depthObjective,
+                depthPredicted,
+                vOGTTable
+},               
+				dx = time[[1, 2, 1]]; (*x step on section*)
+	            len = time[[1, -1, 1]]; (*length of section*)
+                
+                wellValues = Table[Values[Normal[wellDataset[Select[#horizon == i&]][[All, {4}]]]], {i, 2, Max[wellDataset[All, 3]]}]; (*pairs (depth, time)*)
+                wellValues *= -1;   (*transform depths to positive values for easy calculations and presentable plots*)     
+                
+                positions = DeleteDuplicates[Normal[wellDataset[All, "x"]]];
+                surface = Values[Normal[wellDataset[Select[#horizon == 1&]][[All, {2, 4}]]]]; (*(x, depth) of first horizon*)
+                
+                vAveTableFullHor = Table[Table[Abs[(horizons[[i, j, 2]] - horizons[[1, j, 2]]) / time[[i, j, 2]]], {j, Length[horizons[[i]]]}], {i, 2, Length[horizons]}];
+				vAveTable = Extract[#, Partition[positions/dx, 1]]&/@vAveTableFullHor; (*define average velocity for each horizon for each position on section*)
+				vOGTTable = RandomReal[{0.5, 1.5}] * #&/@vAveTable;(*WILL BE CHANGED = vOGT*)
+				table = Table[Table[{vOGTTable[[i, j]], vAveTable[[i, j]]}, {j, Length[vAveTable[[i]]]}], {i, Length[vAveTable]}];
+				
+				lmSet = Table[LinearModelFit[table[[i]], v, v], {i, Length[table]}];	(*evaluate linear model for each horizon*)
+                lmParametres = Table[lmSet[[i]]["BestFitParameters"], {i, Length[lmSet]}]; (*linear model fits parameters*)  
+
+                 fits = Table[Table[{(j - 1) dx, -(vAveTableFullHor[[i, j]] * lmParametres[[i, 2]] + lmParametres[[i, 1]]) * time[[i + 1, j, 2]] / 2}, {j, len/dx + 1}], {i, Length[vAveTableFullHor]}];(*evaluate fits (x, h = vAve*t/2). make data suitable for ListLinePlot*)
+								
+				(*find errors between wells values and predicted by model*)
+				 (*x positions of wells*)
+				depthObjective = -Map[Flatten]@wellValues;
+				depthPredicted = Table[Flatten[Cases[fits[[i]], {#, __}]&/@positions, 1], {i, 1, Length[fits]}][[All, All, 2]];
+				errors = Table[Table[{positions[[j]], (depthObjective - depthPredicted)[[i, j]]}, {j, 1, Length[positions]}],{i, 1, Length[depthObjective]}];
+				interpolationErrors = Table[Table[{(j - 1)dx, Interpolation[errors[[i]], (j - 1)dx, Method -> "Spline"]}, {j, len/dx + 1}], {i, Length[errors]}]; (*interpolate errors*)
+				
+				result = Table[Table[{fits[[i, j, 1]], (fits[[i, j, 2]] + interpolationErrors[[i, j, 2]])}, {j, len/dx + 1}], {i, Length[fits]}]; (*add errors to fits*)
+				If[Length[surface] != 0, result = Join[{surface}, result]];
+				
+                Return[<|"depthObjective" -> depthObjective,
+                "depthPredicted" -> depthPredicted,
+                "wellValues" -> wellValues,
+                "result" -> result,
+                "lmSet" -> lmSet,
+                "lmParametres" -> lmParametres,
+                "plotData" -> table,
+                "fits" -> fits,
+                "errors" -> errors[[All, 2]],
+                "RMSError" -> Map[StandardDeviation[#[[All, 2]]]&, errors]|>]
+]
+
+
+(*VOGTMethod[wellDataset_, horizons_,  time_, vOGT_, v_]:= 
+Module[{                
+                i,
+                j,
+                dx,
+                len,
+                wellValues,
+                surface,
+                positions,                
+                errors,
+                interpolationErrors,
+                result,
+                vAveTable,
+				vAveTableFullHor,
+				table,
+				lmSet,
+				lmParametres,
+                fits,
+                depthObjective,
+                depthPredicted
+},               
+				dx = time[[1, 2, 1]]; (*x step on section*)
+	            len = time[[1, -1, 1]]; (*length of section*)
+                
+                wellValues = Table[Values[Normal[wellDataset[Select[#horizon == i&]][[All, 4]]]], {i, 2, Max[wellDataset[All, 3]]}]; (*depth*)
+                wellValues[[All, All, 1]] *= -1;   (*transform depths to positive values for easy calculations and presentable plots*)     
+                
+                positions = DeleteDuplicates[Normal[wellDataset[All, "x"]]];
+                surface = Values[Normal[wellDataset[Select[#horizon == 1&]][[All, {2, 4}]]]]; (*(x, depth) of first horizon*)
+             
+		    	fits = Table[Table[{(j - 1) dx, -(vOGT[[i(*!*), j]] * time[[i + 1, j, 2]] / 2)}, {j, len/dx + 1}], {i, Length[time] - 1 }];(*evaluate fits (x, h = vAve*t/2). make data suitable for ListLinePlot*)
+								
+				(*find errors between wells values and predicted by model*)
+				(*x positions of wells*)
+				depthObjective = -wellValues;
+				depthPredicted = Table[Flatten[Cases[fits[[i]], {#, __}]&/@positions, 1], {i, 1, Length[fits]}][[All, All, 2]];
+				errors = Table[Table[{positions[[j]], (depthObjective - depthPredicted)[[i, j]]}, {j, 1, Length[positions]}],{i, 1, Length[depthObjective]}];
+				interpolationErrors = Table[Table[{(j - 1)dx, Interpolation[errors[[i]], (j - 1)dx, Method -> "Spline"]}, {j, len/dx + 1}], {i, Length[errors]}]; (*interpolate errors*)
+				
+				result = Table[Table[{fits[[i, j, 1]], (fits[[i, j, 2]] + interpolationErrors[[i, j, 2]])}, {j, len/dx + 1}], {i, Length[fits]}]; (*add errors to fits*)
+				If[Length[surface] != 0, result = Join[{surface}, result]];
+				
+                Return[<|"depthObjective" -> depthObjective,
+                "depthPredicted" -> depthPredicted,
+                "fits" -> fits,
+                "result" -> result,
+                "vAveTable" -> vAveTable,
+                "fits" -> fits,
+                "errors" -> errors[[All, 2]],
+                "RMSError" -> Map[StandardDeviation[#[[All, 2]]]&, errors]|>]
+]*)
 
 
 AllMethods[set_, horizons_, wellDataset_, time_, dt_, dh_]:= 
