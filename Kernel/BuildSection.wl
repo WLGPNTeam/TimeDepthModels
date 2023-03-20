@@ -128,7 +128,7 @@ Module[{
 						dh1 = Abs[Max[Table[table[[i, j]] - table[[i - 1, j]], {j, len/dx + 1}]]];
 						dh2 = sums[[i - 1]];
 						If[dh1 >= dh2, max = dh1, max = dh2];
-					    table[[i, All]] = Function[x, x - max*1.1]/@table[[i, All]]
+					    table[[i, All]] = Function[x, x - max * 1.1]/@table[[i, All]]
                     ] 
                   ]
                 ];
@@ -140,17 +140,18 @@ Module[{
                 
                 listSumH = Join[{1}, Table[Sum[listH[[i]], {i, 1, i}], {i, 1, Length[listH]}]]; (*needed for increasing Gaussian Filter radius in While below*)
                                 
-                i = 1;
-                While[i < Length[table] + 1, 
-                            table[[-type i]] += anomaly; (*"type" defines which (last or first) hor has the highest anomaly; add anomaly*)
-                               anomalyFiltered = GaussianFilter[anomaly, (radius + hTapering totalH/listSumH[[-i]])];(*changing local anomaly for each horizon*) 
-                               max = Abs[Max[Table[type*(anomaly[[j]] - anomalyFiltered[[j]]), {j, 1, Length[anomaly]}]]]; (*finding max difference between previous and current anomaly; need to know so that the inclined do not intersect*)
-                               anomaly = Table[anomalyFiltered[[j]] + type * max, {j, 1, Length[anomalyFiltered]}]; (*evaluate anomaly for the next horizon*)
-                               i++;
+	                i = 1;
+	                While[i < Length[table] + 1, 
+	                            table[[-type i]] += anomaly; (*"type" defines which (last or first) hor has the highest anomaly; add anomaly*)
+	                               anomalyFiltered = GaussianFilter[anomaly, (radius + hTapering totalH/listSumH[[-i]])];(*changing local anomaly for each horizon*) 
+	                               max = Abs[Max[Table[type*(anomaly[[j]] - anomalyFiltered[[j]]), {j, 1, Length[anomaly]}]]]; (*finding max difference between previous and current anomaly; need to know so that the inclined do not intersect*)
+	                               anomaly = Table[anomalyFiltered[[j]] + type * max, {j, 1, Length[anomalyFiltered]}]; (*evaluate anomaly for the next horizon*)
+	                               i++;
                 ]
     ];
                 (*make data suitable for ListLinePlot and add first horizon as {0,0...0} if it does not exist*)
-                If[MatchQ[table[[1]], Table[0., {j, len/dx + 1}]], 
+                If[MatchQ[table[[1]], 
+                Table[0., {j, len/dx + 1}]], 
                 horizons = Table[{(j - 1) dx, Round[table[[i, j]]]}, {i, Length[listH] + 1}, {j, len/dx + 1}],
                 max = Max[table[[1]]]; (*need to shift horizons under {0,0...0}*)
                 surface = Table[{(j - 1) dx, 0}, {j, len/dx + 1}];
