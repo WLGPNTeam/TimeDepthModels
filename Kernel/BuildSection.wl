@@ -48,13 +48,14 @@ Begin["`Private`"]
 (*Implementation*)
 
 
-DepthSection[listH_, slopes_, len_, dx_, type_, hDispersion_, hTapering_, gaussRadius_] := 
+DepthSection[listH_, slopes_, len_, dx_, type_, hDispersion_, foldingParameters_] := 
 Module[{
                 i,
                 j,
                 horizons,
+                hTapering,
                 radius,
-                parametres,
+                ARparameters,
                 data,
                 anomaly,
                 surface, 
@@ -67,10 +68,12 @@ Module[{
                 max,
                 sums
 },
+				hTapering = foldingParameters[[1]];
+				radius = foldingParameters[[2]]; 
 				If[hTapering >= 1/2 ((len/dx) - radius) listH[[1]]/totalH , Return["hTapering is too big"]]; 
  
-				radius = gaussRadius; (*GaussianFilter radius for layer with the highest dispersion*)
-				parametres = {0.1, 1}; (*parametres for ARProcess*)
+				(*GaussianFilter radius for layer with the highest dispersion*)
+				ARparameters = {0.1, 1}; (*parametres for ARProcess*) (*hmmmm....*)
                 
                 totalH = Total[listH]; 
                                 
@@ -93,21 +96,22 @@ Module[{
                 ];
                 (*make the highest anomaly*)
                 If[hDispersion != 0,
-                anomaly = Table[0, len/dx + 1]; (*init anomaly*);
-                data = RandomFunction[ARProcess[{parametres[[1]]}, parametres[[2]]], {1, len + 1}]; 
-                anomaly = hDispersion GaussianFilter[data["SliceData", Range[1, len + 1, dx]], radius][[1]];
+                  anomaly = Table[0, len/dx + 1]; (*init anomaly*);
+                  data = RandomFunction[ARProcess[{ARparameters[[1]]}, ARparameters[[2]]], {1, len + 1}]; 
+                  anomaly = hDispersion GaussianFilter[data["SliceData", Range[1, len + 1, dx]], radius][[1]];
                 
-                listSumH = Join[{1}, Table[Sum[listH[[i]], {i, 1, i}], {i, 1, Length[listH]}]]; (*needed for increasing Gaussian Filter radius in While below*)
+                  listSumH = Join[{1}, Table[Sum[listH[[i]], {i, 1, i}], {i, 1, Length[listH]}]]; (*needed for increasing Gaussian Filter radius in While below*)
                                 
-	                i = 1;
-	                While[i < Length[table] + 1, 
+	              i = 1;
+	              While[i < Length[table] + 1, 
 	                            table[[-type i]] += anomaly; (*"type" defines which (last or first) hor has the highest anomaly; add anomaly*)
 	                               anomalyFiltered = GaussianFilter[anomaly, (radius + hTapering totalH/listSumH[[-i]])];(*changing local anomaly for each horizon*) 
 	                               max = Abs[Max[Table[type*(anomaly[[j]] - anomalyFiltered[[j]]), {j, 1, Length[anomaly]}]]]; (*finding max difference between previous and current anomaly; need to know so that the inclined do not intersect*)
 	                               anomaly = Table[anomalyFiltered[[j]] + type * max, {j, 1, Length[anomalyFiltered]}]; (*evaluate anomaly for the next horizon*)
 	                               i++;
-                ]
-    ];
+                  ]
+                ];
+                
                 (*make data suitable for ListLinePlot and add first horizon as {0,0...0} if it does not exist*)
                 If[MatchQ[table[[1]], 
                 Table[0., {j, len/dx + 1}]], 
