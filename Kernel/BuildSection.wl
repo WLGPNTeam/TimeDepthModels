@@ -68,9 +68,12 @@ Module[{
                 max,
                 sums
 },
-				hTapering = foldingParameters[[1]];
+		       
+		       If[hDispersion != 0,
+		        hTapering = foldingParameters[[1]];
 				radius = foldingParameters[[2]]; 
-				If[hTapering >= 1/2 ((len/dx) - radius) listH[[1]]/totalH , Return["hTapering is too big"]]; 
+				If[hTapering >= 1/2 ((len/dx) - radius) listH[[1]]/totalH , Return["hTapering is too big"]]
+				]; 
  
 				(*GaussianFilter radius for layer with the highest dispersion*)
 				ARparameters = {0.1, 1}; (*parametres for ARProcess*) (*hmmmm....*)
@@ -243,6 +246,7 @@ Module[{
                 horizonsT,
                 horizonsResult,
                 length,
+                dx,
                 t,
                 i,
                 j,
@@ -288,7 +292,8 @@ Module[{
                     ]
                 ];
 
-                (*add surface (zeros)*)	
+                (*add surface (zeros)*)
+                dx = horizonsBot[[1, 2, 1]]- horizonsBot[[1, 1, 1]];
                 surface = Table[{(j - 1) dx, 0}, {j, length + 1}];
                 horizonsResult = Join [{surface}, horizonsResult]; 
                 
