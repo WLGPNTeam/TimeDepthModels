@@ -68,8 +68,7 @@ Show[ListContourPlot[Flatten[model, 2][[All, 2 ;; 4]],
 						PlotLabel -> "\:0421\:043a\:043e\:0440\:043e\:0441\:0442\:043d\:043e\:0439 \:0440\:0430\:0437\:0440\:0435\:0437",
 						Contours -> {Automatic, 20},
 						ContourStyle -> None}],
-			ListLinePlot[horizons, {PlotStyle -> {Directive[Thickness[0.001], Black]}, PlotLabels -> Placed[Map["Hor " <> ToString[#] &, (Range[Length[horizons]] - 1)], {Above}],ImageSize -> 500}], {Frame -> True,(*
-			FrameStyle -> Directive[14, Black],*) FrameLabel->{"x, \:043c","z, \:043c"},
+			ListLinePlot[horizons, {PlotStyle -> {Directive[Thickness[0.001], Black]}, PlotLabels -> Map["Hor " <> ToString[#] &, (Range[Length[set1]] - 1)], ImageSize -> 500}], {Frame -> True, FrameLabel->{"x, \:043c","z, \:043c"},
 			PlotRangePadding -> {{Scaled[0.05], Scaled[0.2]}, {Scaled[0.05], Scaled[0.05]}}}
 ] 
 
@@ -95,10 +94,10 @@ Module[{
 				
 				min = Table[Min[points[[i]][[All, 1]]], {i, Length[points]}];
 				max = Table[Max[points[[i]][[All, 1]]], {i, Length[points]}];
-				plots = Table[Show[ListPlot[points[[i]], PlotMarkers->{Automatic, Scaled[0.01]}, ImageSize -> 500,
-												PlotLabel -> StringJoin[ "\:041c\:0435\:0442\:043e\:0434:", plotName],
-												LabelStyle -> Directive[14, Gray](*,
-												GridLines -> {points[[i]][[All, 1]], points[[i]][[All, 2]]}*)
+				plots = Table[Show[ListPlot[points[[i]], PlotMarkers->{Automatic, Scaled[0.025]}, ImageSize -> 500,
+												PlotLabel -> StringJoin[ "\:041c\:0435\:0442\:043e\:0434: ", plotName],
+												LabelStyle -> Directive[14, Gray],
+												GridLines -> {points[[i]][[All, 1]], points[[i]][[All, 2]]}
 									],
 									Plot[lmSet[[i]][variable], {variable, min[[i]], max[[i]]}, PlotLegends -> Normal[lmSet[[i]]]], 
 									

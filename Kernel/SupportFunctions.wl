@@ -15,11 +15,11 @@ BeginPackage["WLGPNTeam`TimeDepthModels`"]
 (*Names*)
 
 
-ClearAll[Subsets, CheckVelocity, ImportData, ExportPredictedDepths, ExportPredictionModelsParameters, SelectHorizons, ExportDepthSection]
+ClearAll[subsets, CheckVelocity, ImportData, ExportPredictedDepths, ExportPredictionModelsParameters, SelectHorizons, ExportDepthSection]
 
 
-Subsets::usage = 
-"Subsets[set]"
+subsets::usage = 
+"subsets[set]"
 
 
 CheckVelocity::usage = 
@@ -57,7 +57,7 @@ Begin["`Private`"]
 (*Implementation*)
 
 
-Subsets[set_]:= Table[Join[{set[[1]]}, Cases[set[[2 ;; -1]], {__, i}][[All, 1]]], {i, 4}]; (*S s !!!*)
+subsets[set_]:= Table[Join[{set[[1]]}, Cases[set[[2 ;; -1]], {__, i}][[All, 1]]], {i, 4}];
 
 
 CheckVelocity[ds_]:= 
@@ -87,7 +87,7 @@ Module[{
                 
                 result = Dataset[Map[<|"well" -> #[[1]], "layer" -> #[[2]], "dh" -> #[[3]], "dt" -> #[[4]], "Vint" -> #[[5]]|>&, Flatten[table, 1]]]; (*make dataset*)
 				
-                Return[<|"dataset" -> result|>]
+                Return[<|"ds" -> result|>]
 ]
 
 

@@ -141,7 +141,7 @@ Module[{
                 anomalyQ,
                 horizonsJoined,
                 layerThickness,
-                dataset,
+                ds,
                 model,
                 trend,
                 anomaly
@@ -169,9 +169,9 @@ Module[{
                 ];  
                 
                 model = Table[DeleteCases[model[[i, j]], {0, 0, 0, 0}], {i, Length[horizons]}, {j, Length[horizons[[i]]]}]; (*delete (0, 0, 0, 0) cases*)
-                dataset = Dataset[Map[<|"layer" -> #[[1]], "x" -> #[[2]], "z" -> -#[[3]], "v" -> #[[4]]|>&, Flatten[model, 2]]]; (*make dataset*)
+                ds = Dataset[Map[<|"layer" -> #[[1]], "x" -> #[[2]], "z" -> -#[[3]], "v" -> #[[4]]|>&, Flatten[model, 2]]]; (*make dataset*)
                 
-                <|"model" -> model, "dataset" -> dataset|>
+                <|"model" -> model, "ds" -> ds|>
 ]
 
 

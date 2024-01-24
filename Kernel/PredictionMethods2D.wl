@@ -340,7 +340,7 @@ Module[{
                 "result" -> result,
                 "lmSet" -> lmSet,
                 "lmParametres" -> lmParametres,
-                "errors" -> errors[[All, All,2]],
+                "errors" -> errors[[All, All, 2]],
                 "RMSError" -> Map[StandardDeviation[#[[All, 2]]]&, errors],
                  "RSquared" -> Table[lmSet[[i]]["RSquared"], {i, Length[lmSet]}]|>]
 ]
@@ -395,7 +395,7 @@ Module[{
                 "lmSet" -> lmSet,
                 "lmParametres" -> lmParametres,
                 "fits" -> fits,
-                "errors" -> errors[[All, All,2]],
+                "errors" -> errors[[All, All, 2]],
                 "RMSError" -> Map[StandardDeviation[#[[All, 2]]]&, errors],
                  "RSquared" -> Table[lmSet[[i]]["RSquared"], {i, Length[lmSet]}]|>]
 ]
@@ -442,8 +442,9 @@ Module[{`
                 "fits"-> fits,
                 "result" -> result,
                 "vAveTable" -> vAveTable,
-                "errors" -> errors[[All, All,2]],
+                "errors" -> errors[[All, All, 2]],
                 "RMSError" -> Map[StandardDeviation[#[[All, 2]]]&, errors]|>]
+                
 ]
 
 
@@ -495,7 +496,7 @@ Module[{
 ]
 
 
-VaveRegressionMethod2D[ds_, horizons_, timeSection_, velSection_, var_]:= 
+VaveRegressionMethod2D[ds_, horizons_, timeSection_, vOGTTable_, var_]:= 
 Module[{                
                 i,
                 j,
@@ -513,9 +514,9 @@ Module[{
 				lmParametres,
                 fits,
                 depthObjective,
-                depthPredicted,
-                vOGTTable
-},               
+                depthPredicted
+},              
+ 
 				dx = timeSection[[1, 2, 1]]; (*x step on section*)
 	            len = timeSection[[1, -1, 1]]; (*length of section*)
                 
@@ -524,19 +525,19 @@ Module[{
                 
                 positions = DeleteDuplicates[Normal[ds[All, "x"]]];
                 
-                vAveTableFullHor = Table[Table[Abs[(horizons[[i, j, 2]] - horizons[[1, j, 2]]) / timeSection[[i, j, 2]]], {j, Length[horizons[[i]]]}], {i, 2, Length[horizons]}];
+                vAveTableFullHor = Table[Table[Abs[(horizons[[i, j, 2]] - horizons[[1, j, 2]]) / timeSection[[i, j, 2]]]/2, {j, len/dx + 1}], {i, 2, Length[horizons]}];
 				vAveTable = Extract[#, Partition[positions/dx, 1]]&/@vAveTableFullHor; (*define average velocity for each horizon for each position on section*)
-				vOGTTable = RandomReal[{0.5, 1.5}] * #&/@vAveTable;(*WILL BE CHANGED = vOGT*)
+		
 				table = Table[Table[{vOGTTable[[i, j]], vAveTable[[i, j]]}, {j, Length[vAveTable[[i]]]}], {i, Length[vAveTable]}];
 				
 				lmSet = Table[LinearModelFit[table[[i]], var, var], {i, Length[table]}];	(*evaluate linear model for each horizon*)
                 lmParametres = Table[lmSet[[i]]["BestFitParameters"], {i, Length[lmSet]}]; (*linear model fits parameters*)  
 
-                 fits = Table[Table[{(j - 1) dx, -(vAveTableFullHor[[i, j]] * lmParametres[[i, 2]] + lmParametres[[i, 1]]) * timeSection[[i + 1, j, 2]] / 2}, {j, len/dx + 1}], {i, Length[vAveTableFullHor]}];(*evaluate fits (x, h = vAve*t/2). make data suitable for ListLinePlot*)
+                 fits = Table[Table[{(j - 1) dx, -(vAveTableFullHor[[i, j]] * lmParametres[[i, 2]] + lmParametres[[i, 1]])*timeSection[[i + 1, j, 2]]/2}, {j, len/dx + 1}], {i, Length[timeSection]-1}];(*evaluate fits (x, vAve = k*vOGT+b)*)
 								
 				(*find errors between wells values and predicted by model*)
 				 (*x positions of wells*)
-				depthObjective = -values[[All,All,2]];
+				depthObjective = -values[[All, All, 2]];
 				depthPredicted = Table[Flatten[Cases[fits[[i]], {#, __}]&/@positions, 1], {i, Length[fits]}][[All, All, 2]];
 				errors = Table[Table[{positions[[j]], (depthObjective - depthPredicted)[[i, j]]}, {j, Length[positions]}],{i, Length[depthObjective]}];
 				interpolationErrors = Table[Table[{(j - 1)dx, Interpolation[errors[[i]], (j - 1)dx, Method -> "Spline"]}, {j, len/dx + 1}], {i, Length[errors]}]; (*interpolate errors*)
@@ -551,8 +552,8 @@ Module[{
                 "lmParametres" -> lmParametres,
                 "plotData" -> table,
                 "fits" -> fits,
-                "errors" -> errors[[All, All,2]],
-                "RMSError" -> Map[StandardDeviation[#[[All, All,2]]]&, errors],
+                "errors" -> errors[[All, All, 2]],
+                "RMSError" -> Map[StandardDeviation[#[[All, 2]]]&, errors],
                 "RSquared" -> Table[lmSet[[i]]["RSquared"], {i, Length[lmSet]}]|>]
 ]
 
