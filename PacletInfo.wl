@@ -27,6 +27,18 @@ PacletObject[
           {
             "WLGPNTeam`TimeDepthModels`Visualisation`",
             "Visualisation.wl"
+          }, 
+          {
+            "WLGPNTeam`TimeDepthModels`PredictionMethods2D`",
+            "PredictionMethods2D.wl"
+          }, 
+          {
+            "WLGPNTeam`TimeDepthModels`PredictionMethods3D`",
+            "PredictionMethods3D.wl"
+          }, 
+          {
+            "WLGPNTeam`TimeDepthModels`SupportFunctions`",
+            "SupportFunctions.wl"
           }
         }
       },
